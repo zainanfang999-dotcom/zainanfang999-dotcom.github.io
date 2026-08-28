@@ -1,15 +1,6 @@
 const projectsLinks = [
-  {
-    title: 'Project 3',
-    href: '/projects/project3',
-  },
-  {
-    title: 'Project 4',
-    href: '/projects/project4',
-  },
-  {
-    title: 'Project 2',
-    href: '/projects/project2',
-  },
+  { title: '衣橱决策助手', href: '/projects/wardrobe-wise' },
+  { title: 'GeoField Analyzer', href: '/projects/geofield' },
+  { title: '场景实验问卷工具', href: '/projects/scene-survey' },
 ];
 export default projectsLinks;

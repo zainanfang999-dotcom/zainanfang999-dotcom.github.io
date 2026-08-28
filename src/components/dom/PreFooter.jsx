@@ -1,24 +1,15 @@
-import FruitNinja from '@src/components/dom/prefooter/Index';
 import clsx from 'clsx';
 import styles from '@src/components/dom/styles/preFooter.module.scss';
 
 function PreFooter() {
   return (
-    <section className={clsx(styles.root, 'layout-block-inner')}>
-      <div className={styles.textsContainer}>
-        <div>
-          <h2 className="h1">Let&apos;s slice through</h2>
-          <h2 className="h1"> your next challenge</h2>
-          <h2 className="h1"> together!</h2>
-        </div>
-        <div>
-          <h6 className="h6">Start your project with a trusted partner today.</h6>
-        </div>
-      </div>
-
-      <div className={styles.canvas}>
-        <FruitNinja />
-      </div>
+    <section id="contact" className={clsx(styles.root, 'layout-block-inner')}>
+      <div className={styles.label}>CONTACT / 2026</div>
+      <h2>赵庆卓</h2>
+      <p>AI 产品经理 · 东南大学建筑学硕士 · 南京</p>
+      <a href="mailto:zai_nanfang@163.com">
+        zai_nanfang@163.com <b>↗</b>
+      </a>
     </section>
   );
 }

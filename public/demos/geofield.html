@@ -1,0 +1,2911 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GeoField Analyzer — KMZ 多被试空间分析工具</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<style>
+:root {
+  --bg: #0d0f12;
+  --surface: #141720;
+  --surface2: #1c2030;
+  --border: rgba(120,140,200,0.12);
+  --border2: rgba(120,140,200,0.22);
+  --accent: #4e9eff;
+  --accent2: #7fd4c1;
+  --accent3: #f4a261;
+  --text: #e8eaf2;
+  --text2: #8a90a8;
+  --text3: #555c78;
+  --danger: #e05252;
+  --success: #52d98e;
+  --font-mono: 'IBM Plex Mono', monospace;
+  --font-sans: 'IBM Plex Sans', sans-serif;
+  --grid: rgba(120,140,200,0.04);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Grid texture */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(var(--grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* HEADER */
+header {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 0 24px;
+  height: 52px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+  flex-shrink: 0;
+}
+.logo {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--accent);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.logo span { color: var(--text3); }
+header nav {
+  display: flex;
+  gap: 2px;
+  margin-left: auto;
+}
+.nav-btn {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  padding: 5px 12px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  color: var(--text2);
+  cursor: pointer;
+  transition: all 0.15s;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.nav-btn:hover { color: var(--text); border-color: var(--border2); }
+.nav-btn.active { color: var(--accent); border-color: var(--accent); background: rgba(78,158,255,0.08); }
+
+/* MAIN LAYOUT */
+main {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* LEFT PANEL */
+.panel-left {
+  width: 300px;
+  flex-shrink: 0;
+  border-right: 1px solid var(--border);
+  background: var(--surface);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.panel-section {
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.panel-section-hdr {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+  user-select: none;
+}
+.panel-section-hdr:hover { color: var(--text2); }
+.panel-section-hdr .badge {
+  margin-left: auto;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  padding: 1px 6px;
+  font-size: 10px;
+  color: var(--accent);
+}
+
+/* DROP ZONE */
+.drop-zone {
+  margin: 12px;
+  border: 1px dashed var(--border2);
+  border-radius: 4px;
+  padding: 20px 16px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: var(--surface2);
+}
+.drop-zone:hover, .drop-zone.drag-over {
+  border-color: var(--accent);
+  background: rgba(78,158,255,0.06);
+}
+.drop-zone svg { display: block; margin: 0 auto 8px; }
+.drop-zone p {
+  font-size: 12px;
+  color: var(--text2);
+  line-height: 1.5;
+}
+.drop-zone p span { color: var(--accent); }
+.drop-zone input { display: none; }
+
+/* SUBJECT LIST */
+.subject-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px;
+}
+.subject-list::-webkit-scrollbar { width: 4px; }
+.subject-list::-webkit-scrollbar-track { background: transparent; }
+.subject-list::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+.subject-item {
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  margin-bottom: 6px;
+  overflow: hidden;
+  background: var(--surface2);
+}
+.subject-hdr {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.subject-hdr:hover { background: rgba(78,158,255,0.06); }
+.subject-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.subject-name {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text);
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.subject-count {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text3);
+}
+.subject-toggle-btn {
+  width: 16px; height: 16px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text3);
+  font-size: 10px;
+  transition: color 0.15s;
+  flex-shrink: 0;
+}
+.subject-toggle-btn:hover { color: var(--accent); }
+
+.subject-points {
+  display: none;
+  padding: 0 10px 8px;
+  border-top: 1px solid var(--border);
+}
+.subject-points.open { display: block; }
+.point-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 0;
+  cursor: pointer;
+  transition: color 0.15s;
+}
+.point-row:hover .point-id { color: var(--accent); }
+.point-id {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text2);
+  flex: 1;
+}
+.point-time {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--text3);
+}
+
+.btn-vis {
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  border: 1px solid currentColor;
+  background: transparent;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.15s;
+}
+.btn-vis.off { opacity: 0.3; }
+.btn-vis:hover { opacity: 1; }
+
+/* CENTER — MAP */
+#map-container {
+  flex: 1;
+  position: relative;
+  background: #0a0c10;
+}
+#map { width: 100%; height: 100%; }
+
+/* Leaflet overrides */
+.leaflet-tile { filter: var(--tile-filter, brightness(0.7) saturate(0.4) hue-rotate(200deg)); transition: filter 0.4s; }
+.leaflet-control-zoom a {
+  background: var(--surface) !important;
+  color: var(--text) !important;
+  border-color: var(--border2) !important;
+}
+
+/* ── Theme presets ── (tuned for light voyager/light basemaps) */
+:root[data-theme="dark"] { --tile-filter: brightness(0.7) saturate(0.4) hue-rotate(200deg); }
+/* 水彩纸本：暖米白、低饱和、柔对比，仿手绘水彩底 */
+:root[data-theme="watercolor"] {
+  --tile-filter: sepia(0.32) saturate(0.78) brightness(1.06) contrast(0.9) hue-rotate(-8deg);
+}
+/* 青瓦台：清雅淡青绿，仿江南园林水墨 */
+:root[data-theme="celadon"] {
+  --tile-filter: sepia(0.22) saturate(0.85) brightness(1.03) contrast(0.92) hue-rotate(108deg);
+}
+/* 苔绿：低饱和植被绿，自然温润 */
+:root[data-theme="moss"] {
+  --tile-filter: sepia(0.3) saturate(0.9) brightness(0.99) contrast(0.93) hue-rotate(58deg);
+}
+/* 学术灰：纯净灰阶，出版级 */
+:root[data-theme="academic"] {
+  --tile-filter: grayscale(1) brightness(1.05) contrast(0.9);
+}
+/* 黛蓝：冷调水景，宁静学术 */
+:root[data-theme="indigo"] {
+  --tile-filter: sepia(0.25) saturate(0.8) brightness(1.0) contrast(0.92) hue-rotate(175deg);
+}
+
+/* Map toolbar */
+.map-toolbar {
+  position: absolute;
+  top: 12px; left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  display: flex;
+  gap: 2px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 3px;
+}
+
+/* Theme picker strip */
+.theme-strip {
+  position: absolute;
+  top: 52px; left: 50%;
+  transform: translateX(-50%);
+  z-index: 999;
+  display: none;
+  gap: 6px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 8px 10px;
+  align-items: center;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.35);
+}
+.theme-strip.open { display: flex; }
+.theme-swatch {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  opacity: 0.7;
+  transition: opacity 0.15s, transform 0.15s;
+}
+.theme-swatch:hover { opacity: 1; transform: translateY(-2px); }
+.theme-swatch.active { opacity: 1; }
+.theme-swatch.active .swatch-ring { outline: 2px solid var(--accent); outline-offset: 2px; }
+.swatch-ring {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(255,255,255,0.15);
+}
+.swatch-label {
+  font-family: var(--font-mono);
+  font-size: 8.5px;
+  color: var(--text3);
+  text-align: center;
+  white-space: nowrap;
+  letter-spacing: 0.04em;
+}
+
+/* Map legend (bottom-left) */
+.map-legend {
+  position: absolute;
+  bottom: 16px; left: 16px;
+  z-index: 1000;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  padding: 10px 12px;
+  max-width: 220px;
+  max-height: 320px;
+  overflow-y: auto;
+  display: none;
+  box-shadow: 0 4px 18px rgba(0,0,0,0.3);
+}
+.map-legend.visible { display: block; }
+.map-legend-title {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 8px;
+}
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-bottom: 5px;
+  font-size: 11px;
+  color: var(--text);
+}
+.legend-item:last-child { margin-bottom: 0; }
+.legend-dot {
+  width: 11px; height: 11px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  border: 1.5px solid rgba(255,255,255,0.25);
+}
+.legend-gradient-bar {
+  height: 12px;
+  border-radius: 3px;
+  margin: 4px 0 3px;
+}
+.legend-gradient-labels {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--text3);
+}
+
+/* Color-by selector segmented control */
+.colorby-row {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+.colorby-btn {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  padding: 5px 9px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  color: var(--text2);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.colorby-btn:hover { color: var(--text); border-color: var(--border2); }
+.colorby-btn.active { background: rgba(78,158,255,0.12); border-color: var(--accent); color: var(--accent); }
+
+/* Export option buttons */
+.export-img-btn {
+  width: 100%;
+  padding: 9px;
+  margin-bottom: 8px;
+  background: rgba(82,217,142,0.08);
+  border: 1px solid rgba(82,217,142,0.3);
+  border-radius: 4px;
+  color: var(--success);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  cursor: pointer;
+  transition: all 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+.export-img-btn:hover { background: rgba(82,217,142,0.16); }
+
+/* Quick export floating button on map */
+.map-export-fab {
+  position: absolute;
+  bottom: 16px; right: 16px;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.fab-btn {
+  width: 40px; height: 40px;
+  border-radius: 8px;
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  color: var(--accent);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.25);
+}
+.fab-btn:hover { background: var(--surface2); transform: translateY(-1px); }
+
+/* Heatmap control panel (right panel second state) */
+.heatmap-panel {
+  display: none;
+  flex-direction: column;
+  gap: 0;
+  overflow-y: auto;
+  flex: 1;
+}
+.heatmap-panel.visible { display: flex; }
+.hm-section {
+  padding: 10px 14px 12px;
+  border-bottom: 1px solid var(--border);
+}
+.hm-label {
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.hm-label span { color: var(--accent); font-size: 10px; }
+.hm-slider {
+  width: 100%;
+  accent-color: var(--accent);
+  margin-bottom: 0;
+}
+.hm-palette-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 5px;
+}
+.hm-pal {
+  height: 22px;
+  border-radius: 3px;
+  cursor: pointer;
+  border: 1.5px solid transparent;
+  transition: border-color 0.15s, transform 0.12s;
+}
+.hm-pal:hover { transform: scaleY(1.12); }
+.hm-pal.active { border-color: var(--accent); }
+.hm-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 0 2px;
+}
+.hm-toggle-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text2);
+}
+/* Toggle switch */
+.toggle-sw { position:relative; width:32px; height:18px; cursor:pointer; }
+.toggle-sw input { opacity:0; width:0; height:0; }
+.toggle-track {
+  position:absolute; inset:0;
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius:9px;
+  transition: background 0.2s;
+}
+.toggle-sw input:checked ~ .toggle-track { background: var(--accent); border-color: var(--accent); }
+.toggle-thumb {
+  position:absolute; top:3px; left:3px;
+  width:12px; height:12px;
+  background: var(--text3);
+  border-radius:50%;
+  transition: left 0.2s, background 0.2s;
+}
+.toggle-sw input:checked ~ .toggle-track .toggle-thumb { left:17px; background:#fff; }
+.map-tool-btn {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  padding: 5px 12px;
+  background: transparent;
+  border: none;
+  border-radius: 2px;
+  color: var(--text2);
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  transition: all 0.15s;
+}
+.map-tool-btn:hover { color: var(--text); background: var(--surface2); }
+.map-tool-btn.active { color: var(--accent); background: rgba(78,158,255,0.12); }
+
+/* Custom marker */
+.custom-marker {
+  width: 20px; height: 20px;
+  border-radius: 50% 50% 50% 0;
+  transform: rotate(-45deg);
+  border: 2px solid rgba(255,255,255,0.3);
+  cursor: pointer;
+  transition: transform 0.15s;
+}
+.custom-marker:hover { transform: rotate(-45deg) scale(1.3); }
+
+/* RIGHT PANEL */
+.panel-right {
+  width: 280px;
+  flex-shrink: 0;
+  border-left: 1px solid var(--border);
+  background: var(--surface);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Info panel */
+.info-empty {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  color: var(--text3);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  text-align: center;
+  padding: 24px;
+}
+.info-empty svg { opacity: 0.3; }
+
+.point-detail { display: none; flex-direction: column; flex: 1; overflow-y: auto; }
+.point-detail.visible { display: flex; }
+.detail-hdr {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+}
+.detail-id {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--accent);
+  margin-bottom: 4px;
+}
+.detail-subject {
+  font-size: 11px;
+  color: var(--text2);
+}
+.detail-body { padding: 12px 16px; }
+.detail-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--border);
+}
+.detail-row:last-child { border-bottom: none; }
+.detail-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  width: 70px;
+  flex-shrink: 0;
+  padding-top: 1px;
+}
+.detail-val {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text);
+  word-break: break-all;
+}
+.detail-val.mono { color: var(--accent2); }
+
+/* Data input area */
+.data-input-area {
+  padding: 12px;
+  border-top: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.data-input-area label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  display: block;
+  margin-bottom: 6px;
+}
+.data-input-area textarea {
+  width: 100%;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  padding: 6px 8px;
+  resize: none;
+  height: 60px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.data-input-area textarea:focus { border-color: var(--accent); }
+.save-btn {
+  margin-top: 6px;
+  width: 100%;
+  padding: 6px;
+  background: rgba(78,158,255,0.1);
+  border: 1px solid rgba(78,158,255,0.3);
+  border-radius: 3px;
+  color: var(--accent);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.save-btn:hover { background: rgba(78,158,255,0.2); }
+
+/* STATS BAR */
+.stats-bar {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  border-top: 1px solid var(--border);
+  flex-shrink: 0;
+  background: var(--surface);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  overflow-x: auto;
+}
+.stat-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-right: 1px solid var(--border);
+  white-space: nowrap;
+}
+.stat-item .val { color: var(--accent); font-weight: 500; }
+
+/* EXPORT PANEL */
+.export-panel {
+  position: absolute;
+  top: 0; right: 0; bottom: 0;
+  width: 360px;
+  background: var(--surface);
+  border-left: 1px solid var(--border);
+  z-index: 2000;
+  transform: translateX(100%);
+  transition: transform 0.25s cubic-bezier(0.4,0,0.2,1);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.export-panel.open { transform: translateX(0); }
+.export-hdr {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+}
+.export-hdr h2 {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text);
+  font-weight: 500;
+}
+.export-hdr button {
+  margin-left: auto;
+  background: transparent;
+  border: none;
+  color: var(--text3);
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+}
+.export-body { padding: 16px; flex: 1; overflow-y: auto; }
+.export-preview {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 10px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text2);
+  white-space: pre;
+  overflow-x: auto;
+  max-height: 300px;
+  overflow-y: auto;
+  margin-bottom: 12px;
+}
+.export-btn {
+  width: 100%;
+  padding: 9px;
+  background: rgba(127,212,193,0.1);
+  border: 1px solid rgba(127,212,193,0.3);
+  border-radius: 3px;
+  color: var(--accent2);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  margin-bottom: 8px;
+  transition: all 0.15s;
+}
+.export-btn:hover { background: rgba(127,212,193,0.2); }
+
+/* Heatmap canvas */
+#heatmap-canvas {
+  position: absolute;
+  top: 0; left: 0;
+  pointer-events: none;
+  z-index: 500;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+#heatmap-canvas.visible { opacity: 1; }
+
+.loading-overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  transition: opacity 0.4s;
+}
+.loading-overlay.done { opacity: 0; pointer-events: none; }
+.loading-inner { text-align: center; }
+.loading-logo {
+  font-family: var(--font-mono);
+  font-size: 20px;
+  font-weight: 500;
+  color: var(--accent);
+  letter-spacing: 0.1em;
+  margin-bottom: 6px;
+}
+.loading-sub {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text3);
+  letter-spacing: 0.08em;
+}
+.loading-bar {
+  width: 200px;
+  height: 2px;
+  background: var(--border);
+  margin: 16px auto 0;
+  border-radius: 1px;
+  overflow: hidden;
+}
+.loading-bar-inner {
+  height: 100%;
+  background: var(--accent);
+  animation: loadbar 1.2s ease-in-out infinite;
+}
+@keyframes loadbar {
+  0% { width: 0; margin-left: 0; }
+  50% { width: 60%; margin-left: 20%; }
+  100% { width: 0; margin-left: 100%; }
+}
+
+/* Color swatch */
+.swatch { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 5px; }
+
+/* Confirm dialog */
+.confirm-mask {
+  position: fixed; inset: 0; z-index: 8000;
+  background: rgba(0,0,0,0.6);
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; pointer-events: none; transition: opacity 0.18s;
+}
+.confirm-mask.open { opacity: 1; pointer-events: all; }
+.confirm-box {
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: 6px;
+  padding: 20px 22px;
+  width: 280px;
+  transform: translateY(10px); transition: transform 0.18s;
+}
+.confirm-mask.open .confirm-box { transform: translateY(0); }
+.confirm-title {
+  font-family: var(--font-mono);
+  font-size: 12px; font-weight: 500;
+  color: var(--text); margin-bottom: 6px;
+  text-transform: uppercase; letter-spacing: 0.08em;
+}
+.confirm-msg { font-size: 12px; color: var(--text2); margin-bottom: 16px; line-height: 1.6; }
+.confirm-actions { display: flex; gap: 8px; }
+.confirm-cancel {
+  flex: 1; padding: 7px;
+  background: transparent; border: 1px solid var(--border2);
+  border-radius: 3px; color: var(--text2);
+  font-family: var(--font-mono); font-size: 10px;
+  text-transform: uppercase; letter-spacing: 0.06em; cursor: pointer;
+  transition: all 0.15s;
+}
+.confirm-cancel:hover { color: var(--text); }
+.confirm-ok {
+  flex: 1; padding: 7px;
+  background: rgba(224,82,82,0.12); border: 1px solid rgba(224,82,82,0.35);
+  border-radius: 3px; color: var(--danger);
+  font-family: var(--font-mono); font-size: 10px;
+  text-transform: uppercase; letter-spacing: 0.06em; cursor: pointer;
+  transition: all 0.15s;
+}
+.confirm-ok:hover { background: rgba(224,82,82,0.22); }
+
+/* Save indicator */
+.save-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--text3); flex-shrink: 0; transition: background 0.3s;
+}
+.save-dot.unsaved { background: var(--accent3); }
+.save-dot.saving { background: var(--accent); animation: sdpulse 0.6s infinite alternate; }
+.save-dot.saved { background: var(--success); }
+@keyframes sdpulse { from { opacity: 0.4; } to { opacity: 1; } }
+
+/* Toast */
+.toast {
+  position: fixed;
+  bottom: 20px; left: 50%;
+  transform: translateX(-50%) translateY(60px);
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: 4px;
+  padding: 8px 16px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text);
+  z-index: 9999;
+  transition: transform 0.3s;
+}
+.toast.show { transform: translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+
+<div class="loading-overlay" id="loading">
+  <div class="loading-inner">
+    <div class="loading-logo">GEOFIELD</div>
+    <div class="loading-sub">spatial analysis toolkit</div>
+    <div class="loading-bar"><div class="loading-bar-inner"></div></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<header>
+  <div class="logo">GEOFIELD <span>/ KMZ Spatial Analyzer</span></div>
+  <div style="display:flex;align-items:center;gap:6px;margin-left:auto;">
+    <div class="save-dot" id="save-dot" title="保存状态"></div>
+    <span id="save-label" style="font-family:var(--font-mono);font-size:10px;color:var(--text3);margin-right:8px;">未保存</span>
+  </div>
+  <nav>
+    <button class="nav-btn active" id="btn-map" onclick="switchView('map')">地图</button>
+    <button class="nav-btn" id="btn-table" onclick="switchView('table')">数据表</button>
+    <button class="nav-btn" onclick="saveSession()" title="保存工作存档">存档</button>
+    <button class="nav-btn" onclick="document.getElementById('session-input').click()" title="载入存档">读档</button>
+    <button class="nav-btn" id="btn-export" onclick="toggleExport()">导出</button>
+    <input type="file" id="session-input" accept=".geofield" style="display:none" onchange="loadSession(this)">
+  </nav>
+</header>
+
+<main>
+  <!-- LEFT PANEL -->
+  <div class="panel-left">
+    <div class="panel-section">
+      <div class="panel-section-hdr">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+          <rect x="1" y="1" width="4" height="4" stroke="currentColor" stroke-width="1"/>
+          <rect x="7" y="1" width="4" height="4" stroke="currentColor" stroke-width="1"/>
+          <rect x="1" y="7" width="4" height="4" stroke="currentColor" stroke-width="1"/>
+          <rect x="7" y="7" width="4" height="4" stroke="currentColor" stroke-width="1"/>
+        </svg>
+        被试管理
+        <span class="badge" id="subject-count-badge">0</span>
+      </div>
+
+      <div class="drop-zone" id="drop-zone" onclick="document.getElementById('file-input').click()">
+        <svg width="28" height="28" viewBox="0 0 28 28" fill="none" style="opacity:0.4">
+          <path d="M14 4v14M9 14l5-6 5 6" stroke="#4e9eff" stroke-width="1.5" stroke-linecap="round"/>
+          <path d="M5 20h18" stroke="#4e9eff" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+        <p>拖放 <span>.kmz</span> 文件到此处<br>或点击选择文件（可多选）</p>
+        <input type="file" id="file-input" accept=".kmz,.kml" multiple>
+      </div>
+    </div>
+
+    <div class="subject-list" id="subject-list">
+      <div style="text-align:center;padding:24px 16px;font-family:var(--font-mono);font-size:10px;color:var(--text3);letter-spacing:0.06em;">
+        暂无被试数据
+      </div>
+    </div>
+
+    <div class="panel-section" style="padding:10px 12px 12px;">
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;">
+        <button class="map-tool-btn active" style="flex:1;border:1px solid var(--border);border-radius:3px;" id="btn-show-track" onclick="toggleLayer('track')">轨迹</button>
+        <button class="map-tool-btn active" style="flex:1;border:1px solid var(--border);border-radius:3px;" id="btn-show-points" onclick="toggleLayer('points')">标注点</button>
+        <button class="map-tool-btn" style="flex:1;border:1px solid var(--border);border-radius:3px;" id="btn-heatmap" onclick="toggleHeatmap()">热力图</button>
+      </div>
+
+      <!-- Color-by selector -->
+      <div style="border-top:1px solid var(--border);padding-top:10px;margin-bottom:10px;">
+        <div style="font-family:var(--font-mono);font-size:9.5px;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:7px;">点位着色方式</div>
+        <div class="colorby-row" id="colorby-row">
+          <button class="colorby-btn active" data-mode="subject" onclick="setColorBy('subject')">按被试</button>
+          <button class="colorby-btn" data-mode="location" onclick="setColorBy('location')">按位置</button>
+          <button class="colorby-btn" data-mode="material" onclick="setColorBy('material')">按材质</button>
+          <button class="colorby-btn" data-mode="category" onclick="setColorBy('category')">按分类</button>
+          <button class="colorby-btn" data-mode="status" onclick="setColorBy('status')">按状态</button>
+          <button class="colorby-btn" data-mode="field" id="colorby-field-btn" onclick="setColorBy('field')" style="display:none;">按数值</button>
+        </div>
+        <select id="field-select" onchange="onFieldSelectChange()"
+          style="display:none;width:100%;margin-top:7px;padding:5px;background:var(--surface2);border:1px solid var(--border);border-radius:3px;color:var(--text);font-family:var(--font-mono);font-size:10px;"></select>
+      </div>
+
+      <!-- Table import -->
+      <div style="border-top:1px solid var(--border);padding-top:10px;margin-bottom:10px;">
+        <div style="font-family:var(--font-mono);font-size:9.5px;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:7px;">导入数据表格</div>
+        <button onclick="document.getElementById('table-import-input').click()"
+          style="width:100%;padding:7px;background:rgba(127,212,193,0.08);border:1px solid rgba(127,212,193,0.3);border-radius:3px;color:var(--accent2);font-family:var(--font-mono);font-size:10px;cursor:pointer;">
+          ⊞ 导入 CSV / Excel 对表
+        </button>
+        <input type="file" id="table-import-input" accept=".csv,.xlsx,.xls" style="display:none;" onchange="importDataTable(this)">
+        <div style="font-family:var(--font-mono);font-size:9px;color:var(--text3);margin-top:6px;line-height:1.5;" id="table-import-status">按点位ID列对齐数据</div>
+      </div>
+
+      <div style="border-top:1px solid var(--border);padding-top:8px;">
+        <div style="font-family:var(--font-mono);font-size:10px;color:var(--text3);line-height:1.6;" id="merge-status">导入文件后自动对齐表格点位</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAP CENTER -->
+  <div id="map-container">
+    <div id="map"></div>
+    <canvas id="heatmap-canvas"></canvas>
+
+    <div class="map-toolbar">
+      <button class="map-tool-btn active" id="mbt-osm" onclick="setTile('osm')">街道</button>
+      <button class="map-tool-btn" id="mbt-light" onclick="setTile('light')">浅色</button>
+      <button class="map-tool-btn" id="mbt-topo" onclick="setTile('topo')">地形</button>
+      <button class="map-tool-btn" id="mbt-dark" onclick="setTile('dark')">暗图</button>
+      <div style="width:1px;background:var(--border);margin:3px 2px;"></div>
+      <button class="map-tool-btn" id="mbt-labels" onclick="toggleLabels()" title="切换地名/道路文字">隐藏文字</button>
+      <div style="width:1px;background:var(--border);margin:3px 2px;"></div>
+      <button class="map-tool-btn" id="mbt-theme" onclick="toggleThemeStrip()" title="底图配色">
+        <svg width="11" height="11" viewBox="0 0 11 11" fill="none" style="display:inline;vertical-align:-1px">
+          <circle cx="3" cy="3" r="2.5" fill="#7fd4c1"/>
+          <circle cx="8" cy="3" r="2.5" fill="#a8d5a2"/>
+          <circle cx="3" cy="8" r="2.5" fill="#f4c6a0"/>
+          <circle cx="8" cy="8" r="2.5" fill="#b0b8c8"/>
+        </svg>
+        配色
+      </button>
+    </div>
+
+    <!-- Theme picker strip -->
+    <div class="theme-strip" id="theme-strip">
+      <div class="theme-swatch" id="ts-dark" onclick="setTheme('dark')">
+        <div class="swatch-ring" style="background:linear-gradient(135deg,#0d0f12,#1c2030);"></div>
+        <div class="swatch-label">暗色</div>
+      </div>
+      <div class="theme-swatch active" id="ts-watercolor" onclick="setTheme('watercolor')">
+        <div class="swatch-ring" style="background:linear-gradient(135deg,#f5f0e8,#d4c8b0);"></div>
+        <div class="swatch-label">水彩纸</div>
+      </div>
+      <div class="theme-swatch" id="ts-celadon" onclick="setTheme('celadon')">
+        <div class="swatch-ring" style="background:linear-gradient(135deg,#d4ede8,#a8cfc8);"></div>
+        <div class="swatch-label">青瓦台</div>
+      </div>
+      <div class="theme-swatch" id="ts-moss" onclick="setTheme('moss')">
+        <div class="swatch-ring" style="background:linear-gradient(135deg,#c8ddb8,#98bf88);"></div>
+        <div class="swatch-label">苔绿</div>
+      </div>
+      <div class="theme-swatch" id="ts-indigo" onclick="setTheme('indigo')">
+        <div class="swatch-ring" style="background:linear-gradient(135deg,#d6e4f0,#9bb8d6);"></div>
+        <div class="swatch-label">黛蓝</div>
+      </div>
+      <div class="theme-swatch" id="ts-academic" onclick="setTheme('academic')">
+        <div class="swatch-ring" style="background:linear-gradient(135deg,#f0f0ee,#c8c8c4);"></div>
+        <div class="swatch-label">学术灰</div>
+      </div>
+    </div>
+    <!-- Color legend -->
+    <div class="map-legend" id="map-legend">
+      <div class="map-legend-title" id="legend-title">图例</div>
+      <div id="legend-body"></div>
+    </div>
+
+    <!-- Quick export floating buttons -->
+    <div class="map-export-fab">
+      <button class="fab-btn" onclick="quickExportPNG()" title="快速导出地图为 PNG 图片">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+          <rect x="2.5" y="3.5" width="13" height="11" rx="1.5" stroke="currentColor" stroke-width="1.4"/>
+          <circle cx="6.5" cy="7.5" r="1.3" fill="currentColor"/>
+          <path d="M3 13l3.5-3.5 2.5 2.5 3-3 3 3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- TABLE VIEW -->
+  <div id="table-view" style="display:none;flex:1;overflow:auto;background:var(--bg);padding:16px;">
+    <div id="table-container"></div>
+  </div>
+
+  <!-- RIGHT PANEL -->
+  <div class="panel-right">
+    <div class="panel-section">
+      <div class="panel-section-hdr" style="display:flex;align-items:center;justify-content:space-between;">
+        <div style="display:flex;align-items:center;gap:6px;">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+            <circle cx="6" cy="6" r="5" stroke="currentColor" stroke-width="1"/>
+            <path d="M6 4v4M4 6h4" stroke="currentColor" stroke-width="1" stroke-linecap="round"/>
+          </svg>
+          <span id="right-panel-title">点位详情</span>
+        </div>
+        <!-- Tab switcher shown when heatmap is on -->
+        <div id="hm-tab-switch" style="display:none;gap:3px;display:none;">
+          <button onclick="showRightTab('detail')" id="rtab-detail"
+            style="font-family:var(--font-mono);font-size:9px;padding:3px 8px;border-radius:2px;border:1px solid var(--border);background:transparent;color:var(--text2);cursor:pointer;text-transform:uppercase;letter-spacing:0.06em;">详情</button>
+          <button onclick="showRightTab('heatmap')" id="rtab-heatmap"
+            style="font-family:var(--font-mono);font-size:9px;padding:3px 8px;border-radius:2px;border:1px solid var(--accent);background:rgba(78,158,255,0.12);color:var(--accent);cursor:pointer;text-transform:uppercase;letter-spacing:0.06em;">热力图</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- POINT DETAIL (default) -->
+    <div id="right-detail-pane" style="display:flex;flex-direction:column;flex:1;overflow:hidden;">
+      <div class="info-empty" id="info-empty">
+        <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
+          <circle cx="18" cy="14" r="6" stroke="currentColor" stroke-width="1.5"/>
+          <path d="M18 20c-6 0-10 3-10 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+        点击地图上的标注点<br>查看详情
+      </div>
+
+      <div class="point-detail" id="point-detail">
+        <div class="detail-hdr">
+          <div class="detail-id" id="detail-id">—</div>
+          <div class="detail-subject" id="detail-subject">—</div>
+        </div>
+        <div class="detail-body">
+          <div class="detail-row">
+            <div class="detail-label">经度</div>
+            <div class="detail-val mono" id="d-lon">—</div>
+          </div>
+          <div class="detail-row">
+            <div class="detail-label">纬度</div>
+            <div class="detail-val mono" id="d-lat">—</div>
+          </div>
+          <div class="detail-row">
+            <div class="detail-label">海拔</div>
+            <div class="detail-val" id="d-alt">—</div>
+          </div>
+          <div class="detail-row">
+            <div class="detail-label">时间</div>
+            <div class="detail-val" id="d-time">—</div>
+          </div>
+          <div class="detail-row">
+            <div class="detail-label">速度</div>
+            <div class="detail-val" id="d-speed">—</div>
+          </div>
+          <div class="detail-row">
+            <div class="detail-label">精度</div>
+            <div class="detail-val" id="d-acc">—</div>
+          </div>
+          <div class="detail-row">
+            <div class="detail-label">照片</div>
+            <div class="detail-val" id="d-photo">—</div>
+          </div>
+          <div class="detail-row" id="d-merged-row">
+            <div class="detail-label">合并数</div>
+            <div class="detail-val" id="d-merged">—</div>
+          </div>
+          <div class="detail-row">
+            <div class="detail-label">位置分类</div>
+            <div class="detail-val" id="d-category">—</div>
+          </div>
+          <div class="detail-row">
+            <div class="detail-label">水岸材质</div>
+            <div class="detail-val" id="d-material">—</div>
+          </div>
+          <div class="detail-row">
+            <div class="detail-label">状态</div>
+            <div class="detail-val" id="d-pstatus">—</div>
+          </div>
+          <div class="detail-row">
+            <div class="detail-label">问卷值</div>
+            <div class="detail-val" id="d-survey">—</div>
+          </div>
+        </div>
+
+        <div class="data-input-area">
+          <label>附加问卷数据（JSON）</label>
+          <textarea id="survey-input" placeholder='{"score": 85, "stress": 3}'></textarea>
+          <button class="save-btn" onclick="saveSurveyData()">保存 →</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- HEATMAP CONTROL PANE -->
+    <div id="right-heatmap-pane" style="display:none;flex-direction:column;flex:1;overflow-y:auto;">
+
+      <!-- Color palette -->
+      <div class="hm-section">
+        <div class="hm-label">配色方案</div>
+        <div class="hm-palette-row">
+          <div class="hm-pal active" id="hpal-jade" title="翡翠园林（默认）"
+            style="background:linear-gradient(to right,transparent,#c8f0dc,#8cd7b4,#40be82,#eeb446,#e16e5a)"
+            onclick="setHmPalette('jade')"></div>
+          <div class="hm-pal" id="hpal-ocean" title="海洋蓝（水景）"
+            style="background:linear-gradient(to right,transparent,#e1f2f8,#96d2e1,#3ca0e1,#3c5ab4,#1e1e5a)"
+            onclick="setHmPalette('ocean')"></div>
+          <div class="hm-pal" id="hpal-teal" title="青碧国画"
+            style="background:linear-gradient(to right,transparent,#e0f7f7,#96e1e1,#46b4b9,#147882,#0a4146)"
+            onclick="setHmPalette('teal')"></div>
+          <div class="hm-pal" id="hpal-sakura" title="樱粉黛（柔美）"
+            style="background:linear-gradient(to right,transparent,#fceef2,#f5c8d7,#e68caa,#be5a8c,#6e2d5f)"
+            onclick="setHmPalette('sakura')"></div>
+          <div class="hm-pal" id="hpal-plum" title="紫玫学术"
+            style="background:linear-gradient(to right,transparent,#f6ebf8,#d4a5dc,#aa5ab9,#6e2d96,#37145a)"
+            onclick="setHmPalette('plum')"></div>
+          <div class="hm-pal" id="hpal-sunset" title="暖橙日落"
+            style="background:linear-gradient(to right,transparent,#fff6e4,#ffd296,#ff8c5a,#dc503c,#961e28)"
+            onclick="setHmPalette('sunset')"></div>
+          <div class="hm-pal" id="hpal-terrain" title="地形色"
+            style="background:linear-gradient(to right,transparent,#f5f5d7,#aad78c,#5aa550,#a06e3c,#b44632)"
+            onclick="setHmPalette('terrain')"></div>
+          <div class="hm-pal" id="hpal-mono" title="单色灰阶（出版）"
+            style="background:linear-gradient(to right,transparent,#e6e6e6,#b4b4b4,#787878,#3c3c3c,#0a0a0a)"
+            onclick="setHmPalette('mono')"></div>
+        </div>
+      </div>
+
+      <!-- Radius -->
+      <div class="hm-section">
+        <div class="hm-label">影响半径 <span id="hm-radius-val">40 px</span></div>
+        <input type="range" class="hm-slider" id="hm-radius" min="10" max="120" step="5" value="40"
+          oninput="document.getElementById('hm-radius-val').textContent=this.value+' px';redrawHeatmap()">
+      </div>
+
+      <!-- Intensity -->
+      <div class="hm-section">
+        <div class="hm-label">强度 <span id="hm-intensity-val">1.0×</span></div>
+        <input type="range" class="hm-slider" id="hm-intensity" min="0.2" max="5" step="0.1" value="1.0"
+          oninput="document.getElementById('hm-intensity-val').textContent=parseFloat(this.value).toFixed(1)+'×';redrawHeatmap()">
+      </div>
+
+      <!-- Blur -->
+      <div class="hm-section">
+        <div class="hm-label">模糊 <span id="hm-blur-val">10 px</span></div>
+        <input type="range" class="hm-slider" id="hm-blur" min="0" max="40" step="2" value="10"
+          oninput="document.getElementById('hm-blur-val').textContent=this.value+' px';redrawHeatmap()">
+      </div>
+
+      <!-- Opacity -->
+      <div class="hm-section">
+        <div class="hm-label">不透明度 <span id="hm-opacity-val">80%</span></div>
+        <input type="range" class="hm-slider" id="hm-opacity" min="10" max="100" step="5" value="80"
+          oninput="document.getElementById('hm-opacity-val').textContent=this.value+'%';document.getElementById('heatmap-canvas').style.opacity=this.value/100">
+      </div>
+
+      <!-- Gamma -->
+      <div class="hm-section">
+        <div class="hm-label">色阶对比 (γ) <span id="hm-gamma-val">0.6</span></div>
+        <input type="range" class="hm-slider" id="hm-gamma" min="0.2" max="2.0" step="0.1" value="0.6"
+          oninput="document.getElementById('hm-gamma-val').textContent=parseFloat(this.value).toFixed(1);redrawHeatmap()">
+      </div>
+
+      <!-- Toggle: hide points when heatmap on -->
+      <div class="hm-section">
+        <div class="hm-toggle-row">
+          <div class="hm-toggle-label">热力图模式隐藏点位</div>
+          <label class="toggle-sw">
+            <input type="checkbox" id="hm-hide-points" checked onchange="onHmHidePointsChange()">
+            <div class="toggle-track"><div class="toggle-thumb"></div></div>
+          </label>
+        </div>
+        <div class="hm-toggle-row">
+          <div class="hm-toggle-label">热力图模式隐藏轨迹</div>
+          <label class="toggle-sw">
+            <input type="checkbox" id="hm-hide-track" checked onchange="onHmHideTrackChange()">
+            <div class="toggle-track"><div class="toggle-thumb"></div></div>
+          </label>
+        </div>
+        <div class="hm-toggle-row">
+          <div class="hm-toggle-label">仅显示可见被试</div>
+          <label class="toggle-sw">
+            <input type="checkbox" id="hm-visible-only" checked onchange="redrawHeatmap()">
+            <div class="toggle-track"><div class="toggle-thumb"></div></div>
+          </label>
+        </div>
+      </div>
+
+      <div class="hm-section" style="padding-bottom:16px;">
+        <button onclick="redrawHeatmap()" style="width:100%;padding:7px;background:rgba(78,158,255,0.1);border:1px solid rgba(78,158,255,0.3);border-radius:3px;color:var(--accent);font-family:var(--font-mono);font-size:10px;text-transform:uppercase;letter-spacing:0.06em;cursor:pointer;">刷新热力图</button>
+      </div>
+    </div>
+  </div><!-- end panel-right -->
+
+  <!-- EXPORT SLIDE-OVER -->
+  <div class="export-panel" id="export-panel">
+    <div class="export-hdr">
+      <h2>导出数据</h2>
+      <button onclick="toggleExport()">✕</button>
+    </div>
+    <div class="export-body">
+      <div style="font-family:var(--font-mono);font-size:10px;color:var(--text3);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.08em;">导出地图图片</div>
+      <button class="export-img-btn" onclick="exportMapImage(2)">🖼 导出当前地图 PNG（2×高清）</button>
+      <button class="export-img-btn" onclick="exportMapImage(4)" style="background:rgba(78,158,255,0.08);border-color:rgba(78,158,255,0.3);color:var(--accent);">🖼 导出超高清 PNG（4×出版级）</button>
+      <div style="font-family:var(--font-mono);font-size:9px;color:var(--text3);margin-bottom:14px;line-height:1.5;">提示：导出图片包含底图、点位、热力图与图例，按当前地图视野截取</div>
+
+      <div style="font-family:var(--font-mono);font-size:10px;color:var(--text3);margin-bottom:10px;text-transform:uppercase;letter-spacing:0.08em;">导出数据文件</div>
+      <button class="export-btn" onclick="exportJSON()">⬇ 下载 JSON</button>
+      <button class="export-btn" onclick="exportCSV()" style="border-color:rgba(244,162,97,0.3);color:var(--accent3);background:rgba(244,162,97,0.08);">⬇ 下载 CSV（GWR用）</button>
+      <button class="export-btn" onclick="exportGeoJSON()" style="border-color:rgba(82,217,142,0.3);color:var(--success);background:rgba(82,217,142,0.08);">⬇ 下载 GeoJSON</button>
+
+      <div style="font-family:var(--font-mono);font-size:10px;color:var(--text3);margin:14px 0 8px;text-transform:uppercase;letter-spacing:0.08em;">命名规则说明</div>
+      <div style="font-family:var(--font-mono);font-size:10px;color:var(--text2);line-height:1.8;background:var(--surface2);padding:10px;border-radius:3px;border:1px solid var(--border);">
+        格式：<span style="color:var(--accent)">MMDD_姓名缩写_PXX</span><br>
+        示例：<span style="color:var(--accent2)">0512_LYX_P01</span><br><br>
+        导入表格对表时，表格需含<br>一列点位ID（同上格式或纯PXX），<br>其余数值列将挂到对应点位。
+      </div>
+    </div>
+  </div><!-- end export-panel -->
+</main>
+
+<!-- Confirm dialog -->
+<div class="confirm-mask" id="confirm-mask">
+  <div class="confirm-box">
+    <div class="confirm-title" id="confirm-title">确认删除</div>
+    <div class="confirm-msg" id="confirm-msg">此操作不可撤销</div>
+    <div class="confirm-actions">
+      <button class="confirm-cancel" onclick="closeConfirm()">取消</button>
+      <button class="confirm-ok" id="confirm-ok-btn" onclick="confirmAction()">删除</button>
+    </div>
+  </div>
+</div>
+
+<div class="stats-bar" id="stats-bar">
+  <div class="stat-item">被试 <span class="val" id="st-subjects">0</span></div>
+  <div class="stat-item">点位 <span class="val" id="st-points">0</span></div>
+  <div class="stat-item">轨迹点 <span class="val" id="st-track">0</span></div>
+  <div class="stat-item" id="st-center-item" style="display:none">中心 <span class="val" id="st-center">—</span></div>
+  <div class="stat-item" style="margin-left:auto;border-right:none;border-left:1px solid var(--border);">
+    <span id="st-status" style="color:var(--text3)">就绪</span>
+  </div>
+</div>
+
+<script>
+const COLORS = ['#4e9eff','#7fd4c1','#f4a261','#e052a0','#a78bfa','#52d98e','#fbbf24','#f87171','#34d399','#60a5fa'];
+
+// ── Embedded scene database (from result.xlsx) ──
+// One entry per scene point; only the first (start-time) photo is kept.
+// Matching: exact filename first, then time-window fallback (for gerImage/pic_ filenames)
+const SCENE_DB = {"伊曼":[{"pointId":"P01","photoName":"pic_1620010247.png","photoTime":null,"startTime":"2026-05-23 10:37:50","endTime":"2026-05-23 10:39:36","category":"岸上-硬质铺地","location":"岸上","material":"硬质铺地","status":"正常","lat":32.067275,"lon":118.793029},{"pointId":"P02","photoName":"pic_1620010250.png","photoTime":null,"startTime":"2026-05-23 10:50:17","endTime":"2026-05-23 10:52:35","category":"岸上-硬质铺地","location":"岸上","material":"硬质铺地","status":"正常","lat":32.07166,"lon":118.790171},{"pointId":"P03","photoName":"pic_1620010254.png","photoTime":null,"startTime":"2026-05-23 10:54:41","endTime":"2026-05-23 10:56:10","category":"岸上-木制","location":"岸上","material":"木制","status":"正常","lat":32.0708695,"lon":118.7892455},{"pointId":"P04","photoName":"pic_1620010259.png","photoTime":null,"startTime":"2026-05-23 10:59:18","endTime":"2026-05-23 11:00:43","category":"岸上-木制","location":"岸上","material":"木制","status":"正常","lat":32.071657,"lon":118.7874845},{"pointId":"P05","photoName":"pic_1620010269.png","photoTime":null,"startTime":"2026-05-23 11:05:49","endTime":"2026-05-23 11:07:57","category":"岸上-硬质铺地","location":"岸上","material":"硬质铺地","status":"正常","lat":32.072854,"lon":118.784512},{"pointId":"P06","photoName":"pic_1620010379.png","photoTime":null,"startTime":"2026-05-23 11:18:03","endTime":"2026-05-23 11:20:01","category":"岸上-木制","location":"岸上","material":"木制","status":"正常","lat":32.069108,"lon":118.784261},{"pointId":"P07","photoName":"pic_1620010397.png","photoTime":null,"startTime":"2026-05-23 11:23:15","endTime":"2026-05-23 11:24:23","category":"岸上-自然草坡","location":"岸上","material":"自然草坡","status":"正常","lat":32.068123,"lon":118.785621},{"pointId":"P08","photoName":"pic_1620010409.png","photoTime":null,"startTime":"2026-05-23 11:30:20","endTime":"2026-05-23 11:31:48","category":"岸上-自然草坡","location":"岸上","material":"自然草坡","status":"正常","lat":32.067058,"lon":118.789572},{"pointId":"P09","photoName":"pic_1620010417.png","photoTime":null,"startTime":"2026-05-23 11:34:31","endTime":"2026-05-23 11:36:12","category":"岸上-自然草坡","location":"岸上","material":"自然草坡","status":"正常","lat":32.0660825,"lon":118.790373},{"pointId":"P10","photoName":"pic_1620010477.png","photoTime":null,"startTime":"2026-05-23 11:38:41","endTime":"2026-05-23 11:39:40","category":"岸上-自然草坡","location":"岸上","material":"自然草坡","status":"正常","lat":32.065103,"lon":118.791371}],"付梓豪":[{"pointId":"P01","photoName":"picture_2026_05_09_17_26_37_116.jpg","photoTime":"2026-05-09T17:26:37Z","startTime":"2026-05-09 17:26:37","endTime":"2026-05-09 17:27:21","category":"桥上","location":"桥上","material":"","status":"正常","lat":32.0651404,"lon":118.7926851},{"pointId":"P02","photoName":"picture_2026_05_09_17_28_18_483.jpg","photoTime":"2026-05-09T17:28:18Z","startTime":"2026-05-09 17:28:18","endTime":"2026-05-09 17:28:27","category":"岸上-硬质铺地","location":"岸上","material":"硬质铺地","status":"正常","lat":32.0657221,"lon":118.7928138},{"pointId":"P03","photoName":"picture_2026_05_09_17_30_39_825.jpg","photoTime":"2026-05-09T17:30:39Z","startTime":"2026-05-09 17:30:39","endTime":"2026-05-09 17:31:04","category":"岸上-硬质铺地","location":"岸上","material":"硬质铺地","status":"正常","lat":32.0666626,"lon":118.7929674},{"pointId":"P04","photoName":"picture_2026_05_09_17_32_18_417.jpg","photoTime":"2026-05-09T17:32:18Z","startTime":"2026-05-09 17:32:18","endTime":"2026-05-09 17:32:29","category":"岸上-硬质铺地","location":"岸上","material":"硬质铺地","status":"正常","lat":32.067359,"lon":118.7929938},{"pointId":"P05","photoName":"picture_2026_05_09_17_33_33_381.jpg","photoTime":"2026-05-09T17:33:33Z","startTime":"2026-05-09 17:33:33","endTime":"2026-05-09 17:34:01","category":"岸上-硬质铺地","location":"岸上","material":"硬质铺地","status":"多张照片","lat":32.0678511,"lon":118.7927329},{"pointId":"P06","photoName":"picture_2026_05_09_17_34_51_902.jpg","photoTime":"2026-05-09T17:34:51Z","startTime":"2026-05-09 17:34:51","endTime":"2026-05-09 17:35:26","category":"岸上-硬质铺地","location":"岸上","material":"硬质铺地","status":"正常","lat":32.0681305,"lon":118.7927281},{"pointId":"P07","photoName":"picture_2026_05_09_17_37_36_996.jpg","photoTime":"2026-05-09T17:37:36Z","startTime":"2026-05-09 17:37:36","endTime":"2026-05-09 17:38:11","category":"桥上","location":"桥上","material":"","status":"正常","lat":32.0691807,"lon":118.793013},{"pointId":"P08","photoName":"picture_2026_05_09_17_40_11_912.jpg","photoTime":"2026-05-09T17:40:11Z","startTime":"2026-05-09 17:40:11","endTime":"2026-05-09 17:40:42","category":"岸上-自然草坡","location":"岸上","material":"自然草坡","status":"正常","lat":32.0702381,"lon":118.792848},{"pointId":"P09","photoName":"picture_2026_05_09_17_42_04_676.jpg","photoTime":"2026-05-09T17:42:04Z","startTime":"2026-05-09 17:42:04","endTime":"2026-05-09 17:42:48","category":"岸上-自然草坡","location":"岸上","material":"自然草坡","status":"正常","lat":32.0706993,"lon":118.7922433},{"pointId":"P10","photoName":"picture_2026_05_09_17_43_50_119.jpg","photoTime":"2026-05-09T17:43:50Z","startTime":"2026-05-09 17:43:50","endTime":"2026-05-09 17:44:20","category":"岸上-自然草坡","location":"岸上","material":"自然草坡","status":"正常","lat":32.0710939,"lon":118.7921159},{"pointId":"P11","photoName":"picture_2026_05_09_17_46_10_734.jpg","photoTime":"2026-05-09T17:46:10Z","startTime":"2026-05-09 17:46:10","endTime":"2026-05-09 17:46:56","category":"岸上-硬质铺地","location":"岸上","material":"硬质铺地","status":"正常","lat":32.0717897,"lon":118.7914501},{"pointId":"P12","photoName":"picture_2026_05_09_17_47_44_043.jpg","photoTime":"2026-05-09T17:47:44Z","startTime":"2026-05-09 17:47:44","endTime":"2026-05-09 17:48:16","category":"桥上","location":"桥上","material":"","status":"正常","lat":32.07198,"lon":118.791217},{"pointId":"P13","photoName":"picture_2026_05_09_17_49_32_580.jpg","photoTime":"2026-05-09T17:49:32Z","startTime":"2026-05-09 17:49:32","endTime":"2026-05-09 17:50:01","category":"岸上-木制","location":"岸上","material":"木制","status":"正常","lat":32.0718909,"lon":118.7907068},{"pointId":"P14","photoName":"picture_2026_05_09_17_53_07_192.jpg","photoTime":"2026-05-09T17:53:07Z","startTime":"2026-05-09 17:53:07","endTime":"2026-05-09 17:53:33","category":"岸上-木制","location":"岸上","material":"木制","status":"正常","lat":32.07088875,"lon":118.78915665},{"pointId":"P15","photoName":"picture_2026_05_09_17_55_44_215.jpg","photoTime":"2026-05-09T17:55:44Z","startTime":"2026-05-09 17:55:44","endTime":"2026-05-09 17:56:11","category":"岸上-木制","location":"岸上","material":"木制","status":"正常","lat":32.0714644,"lon":118.7878614},{"pointId":"P16","photoName":"picture_2026_05_09_17_59_22_373.jpg","photoTime":"2026-05-09T17:59:22Z","startTime":"2026-05-09 17:59:22","endTime":"2026-05-09 18:00:19","category":"岸上-硬质铺地","location":"岸上","material":"硬质铺地","status":"正常","lat":32.0724087,"lon":118.7861623},{"pointId":"P17","photoName":"picture_2026_05_09_18_03_34_931.jpg","photoTime":"2026-05-09T18:03:34Z","startTime":"2026-05-09 18:03:34","endTime":"2026-05-09 18:04:05","category":"路上","location":"路上","material":"","status":"正常","lat":32.0728858,"lon":118.7842232},{"pointId":"P18","photoName":"picture_2026_05_09_18_06_37_128.jpg","photoTime":"2026-05-09T18:06:37Z","startTime":"2026-05-09 18:06:37","endTime":"2026-05-09 18:07:48","category":"岸上-硬质铺地","location":"岸上","material":"硬质铺地","status":"正常","lat":32.0722025,"lon":118.782964},{"pointId":"P19","photoName":"picture_2026_05_09_18_09_35_485.jpg","photoTime":"2026-05-09T18:09:35Z","startTime":"2026-05-09 18:09:35","endTime":"2026-05-09 18:10:35","category":"岸上-木制","location":"岸上","material":"木制","status":"正常","lat":32.0712456,"lon":118.7831361},{"pointId":"P20","photoName":"picture_2026_05_09_18_12_00_882.jpg","photoTime":"2026-05-09T18:12:00Z","startTime":"2026-05-09 18:12:00","endTime":"2026-05-09 18:12:38","category":"岸上-自然草坡","location":"岸上","material":"自然草坡","status":"正常","lat":32.0705991,"lon":118.78316325},{"pointId":"P21","photoName":"picture_2026_05_09_18_14_20_306.jpg","photoTime":"2026-05-09T18:14:20Z","startTime":"2026-05-09 18:14:20","endTime":"2026-05-09 18:15:12","category":"岸上-硬质铺地","location":"岸上","material":"硬质铺地","status":"正常","lat":32.0696407,"lon":118.7834601},{"pointId":"P22","photoName":"picture_2026_05_09_18_17_33_908.jpg","photoTime":"2026-05-09T18:17:33Z","startTime":"2026-05-09 18:17:33","endTime":"2026-05-09 18:18:17","category":"岸上-硬质铺地","location":"岸上","material":"硬质铺地","status":"正常","lat":32.06893545,"lon":118.78457085},{"pointId":"P23","photoName":"picture_2026_05_09_18_21_23_515.jpg","photoTime":"2026-05-09T18:21:23Z","startTime":"2026-05-09 18:21:23","endTime":"2026-05-09 18:23:34","category":"岸上-自然草坡","location":"岸上","material":"自然草坡","status":"正常","lat":32.0681333,"lon":118.785648},{"pointId":"P24","photoName":"picture_2026_05_09_18_26_15_272.jpg","photoTime":"2026-05-09T18:26:15Z","startTime":"2026-05-09 18:26:15","endTime":"2026-05-09 18:26:44","category":"岸上-木制","location":"岸上","material":"木制","status":"正常","lat":32.06791105,"lon":118.7874038},{"pointId":"P25","photoName":"picture_2026_05_09_18_28_37_755.jpg","photoTime":"2026-05-09T18:28:37Z","startTime":"2026-05-09 18:28:37","endTime":"2026-05-09 18:29:09","category":"岸上-硬质铺地","location":"岸上","material":"硬质铺地","status":"正常","lat":32.06778445,"lon":118.7886053},{"pointId":"P26","photoName":"picture_2026_05_09_18_30_33_615.jpg","photoTime":"2026-05-09T18:30:33Z","startTime":"2026-05-09 18:30:33","endTime":"2026-05-09 18:31:42","category":"岸上-木制","location":"岸上","material":"木制","status":"正常","lat":32.0674851,"lon":118.7893629},{"pointId":"P27","photoName":"picture_2026_05_09_18_34_23_808.jpg","photoTime":"2026-05-09T18:34:23Z","startTime":"2026-05-09 18:34:23","endTime":"2026-05-09 18:34:44","category":"岸上-自然草坡","location":"岸上","material":"自然草坡","status":"正常","lat":32.0662154,"lon":118.7902085}],"周照":[{"pointId":"P01","photoName":"gerImage_17775399971751704732262=1855792807.jpg","photoTime":null,"startTime":"2026-04-30 17:06:37","endTime":"2026-04-30 17:07:11","category":"桥上","location":"桥上","material":"","status":"正常","lat":32.065141,"lon":118.792688},{"pointId":"P02","photoName":"gerImage_1777540060748813722188=1052949620.jpg","photoTime":null,"startTime":"2026-04-30 17:07:40","endTime":"2026-04-30 17:08:06","category":"桥上","location":"桥上","material":"","status":"正常","lat":32.06526,"lon":118.7927295},{"pointId":"P03","photoName":"gerImage_1777540276594411644267=1460368482.jpg","photoTime":null,"startTime":"2026-04-30 17:11:16","endTime":"2026-04-30 17:11:52","category":"桥上","location":"桥上","material":"","status":"正常","lat":32.066674,"lon":118.792988},{"pointId":"P04","photoName":"gerImage_17775404717741648025530=121003704.jpg","photoTime":null,"startTime":"2026-04-30 17:14:31","endTime":"2026-04-30 17:15:08","category":"路上","location":"路上","material":"","status":"正常","lat":32.068197,"lon":118.792909},{"pointId":"P05","photoName":"gerImage_17775406995771750652892=549708297.jpg","photoTime":null,"startTime":"2026-04-30 17:18:19","endTime":"2026-04-30 17:19:03","category":"岸上-硬质铺地","location":"岸上","material":"硬质铺地","status":"正常","lat":32.070032,"lon":118.792954},{"pointId":"P06","photoName":"gerImage_17775410006521851740263=865587917.jpg","photoTime":null,"startTime":"2026-04-30 17:23:20","endTime":"2026-04-30 17:23:52","category":"路上","location":"路上","material":"","status":"正常","lat":32.072004,"lon":118.791259},{"pointId":"P07","photoName":"gerImage_1777541060450762703451=427012014.jpg","photoTime":null,"startTime":"2026-04-30 17:24:20","endTime":"2026-04-30 17:24:52","category":"岸上-木制","location":"岸上","material":"木制","status":"正常","lat":32.071994,"lon":118.791113},{"pointId":"P08","photoName":"gerImage_1777541292671633210173=1581906726.jpg","photoTime":null,"startTime":"2026-04-30 17:28:12","endTime":"2026-04-30 17:29:37","category":"岸上-硬质铺地","location":"岸上","material":"硬质铺地","status":"正常","lat":32.072801,"lon":118.790949},{"pointId":"P09","photoName":"gerImage_17775417777591169356968=1759707479.jpg","photoTime":null,"startTime":"2026-04-30 17:36:17","endTime":"2026-04-30 17:36:47","category":"岸上-硬质铺地","location":"岸上","material":"硬质铺地","status":"正常","lat":32.071678,"lon":118.790131},{"pointId":"P10","photoName":"gerImage_17775419329882146014562=1078892169.jpg","photoTime":null,"startTime":"2026-04-30 17:38:52","endTime":"2026-04-30 17:39:07","category":"岸上-木制","location":"岸上","material":"木制","status":"正常","lat":32.070889,"lon":118.789261},{"pointId":"P11","photoName":"gerImage_177754206914958882940=1803094960.jpg","photoTime":null,"startTime":"2026-04-30 17:41:09","endTime":"2026-04-30 17:41:40","category":"岸上-木制","location":"岸上","material":"木制","status":"正常","lat":32.071246,"lon":118.7882815},{"pointId":"P12","photoName":"gerImage_17775424555751225607378=120060022.jpg","photoTime":null,"startTime":"2026-04-30 17:47:35","endTime":"2026-04-30 17:47:58","category":"岸上-硬质铺地","location":"岸上","material":"硬质铺地","status":"正常","lat":32.072914,"lon":118.784873},{"pointId":"P13","photoName":"gerImage_17775426037271412384449=1808684052.jpg","photoTime":null,"startTime":"2026-04-30 17:50:03","endTime":"2026-04-30 17:50:29","category":"岸上-硬质铺地","location":"岸上","material":"硬质铺地","status":"正常","lat":32.072695,"lon":118.783495},{"pointId":"P14","photoName":"gerImage_1777542993417959816131=1880041100.jpg","photoTime":null,"startTime":"2026-04-30 17:56:33","endTime":"2026-04-30 17:57:06","category":"岸上-自然草坡","location":"岸上","material":"自然草坡","status":"正常","lat":32.0708945,"lon":118.7831435},{"pointId":"P15","photoName":"gerImage_177754315351236422036=112319657.jpg","photoTime":null,"startTime":"2026-04-30 17:59:13","endTime":"2026-04-30 17:59:47","category":"岸上-硬质铺地","location":"岸上","material":"硬质铺地","status":"正常","lat":32.070008,"lon":118.7833445},{"pointId":"P16","photoName":"gerImage_17775432848641259626324=645835342.jpg","photoTime":null,"startTime":"2026-04-30 18:01:24","endTime":"2026-04-30 18:02:28","category":"岸上-自然草坡","location":"岸上","material":"自然草坡","status":"正常","lat":32.0692385,"lon":118.7836115},{"pointId":"P17","photoName":"gerImage_17775434286391722585523=1267839854.jpg","photoTime":null,"startTime":"2026-04-30 18:03:48","endTime":"2026-04-30 18:04:08","category":"岸上-木制","location":"岸上","material":"木制","status":"正常","lat":32.0691395,"lon":118.784237},{"pointId":"P18","photoName":"gerImage_1777543659469253739506=1844838047.jpg","photoTime":null,"startTime":"2026-04-30 18:07:39","endTime":"2026-04-30 18:08:04","category":"岸上-木制","location":"岸上","material":"木制","status":"正常","lat":32.0681635,"lon":118.785388},{"pointId":"P19","photoName":"gerImage_17775438434511930581609=954679940.jpg","photoTime":null,"startTime":"2026-04-30 18:10:43","endTime":"2026-04-30 18:11:29","category":"岸上-自然草坡","location":"岸上","material":"自然草坡","status":"正常","lat":32.0680285,"lon":118.7866645},{"pointId":"P20","photoName":"gerImage_17775439697881386904552=917300926.jpg","photoTime":null,"startTime":"2026-04-30 18:12:49","endTime":"2026-04-30 18:13:10","category":"岸上-木制","location":"岸上","material":"木制","status":"正常","lat":32.0679015,"lon":118.787373},{"pointId":"P21","photoName":"gerImage_177754434212936212454=884842277.jpg","photoTime":null,"startTime":"2026-04-30 18:19:02","endTime":"2026-04-30 18:19:20","category":"岸上-硬质铺地","location":"岸上","material":"硬质铺地","status":"正常","lat":32.0661535,"lon":118.7903015}],"王浩冉":[{"pointId":"P01","photoName":"picture_2026_04_30_15_08_58_791.jpg","photoTime":"2026-04-30T15:08:58Z","startTime":"2026-04-30 15:08:58","endTime":"2026-04-30 15:10:05","category":"桥上","location":"桥上","material":"","status":"多张照片","lat":32.0650196,"lon":118.792671},{"pointId":"P02","photoName":"picture_2026_04_30_15_11_04_329.jpg","photoTime":"2026-04-30T15:11:04Z","startTime":"2026-04-30 15:11:04","endTime":"2026-04-30 15:11:38","category":"桥上","location":"桥上","material":"","status":"正常","lat":32.0654242,"lon":118.7927675},{"pointId":"P03","photoName":"picture_2026_04_30_15_13_04_775.jpg","photoTime":"2026-04-30T15:13:04Z","startTime":"2026-04-30 15:13:04","endTime":"2026-04-30 15:13:40","category":"岸上-硬质铺地","location":"岸上","material":"硬质铺地","status":"正常","lat":32.06624275,"lon":118.79288235},{"pointId":"P04","photoName":"picture_2026_04_30_15_16_00_605.jpg","photoTime":"2026-04-30T15:16:00Z","startTime":"2026-04-30 15:16:00","endTime":"2026-04-30 15:16:44","category":"岸上-硬质铺地","location":"岸上","material":"硬质铺地","status":"正常","lat":32.0672176,"lon":118.7930289},{"pointId":"P05","photoName":"picture_2026_04_30_15_17_40_208.jpg","photoTime":"2026-04-30T15:17:40Z","startTime":"2026-04-30 15:17:40","endTime":"2026-04-30 15:18:23","category":"岸上-硬质铺地","location":"岸上","material":"硬质铺地","status":"正常","lat":32.0676099,"lon":118.7930143},{"pointId":"P06","photoName":"picture_2026_04_30_15_19_40_290.jpg","photoTime":"2026-04-30T15:19:40Z","startTime":"2026-04-30 15:19:40","endTime":"2026-04-30 15:20:13","category":"岸上-硬质铺地","location":"岸上","material":"硬质铺地","status":"正常","lat":32.0680971,"lon":118.7927439},{"pointId":"P07","photoName":"picture_2026_04_30_15_23_34_326.jpg","photoTime":"2026-04-30T15:23:34Z","startTime":"2026-04-30 15:23:34","endTime":"2026-04-30 15:24:37","category":"路上","location":"路上","material":"","status":"正常","lat":32.0697409,"lon":118.7931185},{"pointId":"P08","photoName":"picture_2026_04_30_15_25_51_460.jpg","photoTime":"2026-04-30T15:25:51Z","startTime":"2026-04-30 15:25:51","endTime":"2026-04-30 15:26:44","category":"岸上-自然草坡","location":"岸上","material":"自然草坡","status":"正常","lat":32.0701667,"lon":118.7927938},{"pointId":"P09","photoName":"picture_2026_04_30_15_28_31_068.jpg","photoTime":"2026-04-30T15:28:31Z","startTime":"2026-04-30 15:28:31","endTime":"2026-04-30 15:29:09","category":"岸上-自然草坡","location":"岸上","material":"自然草坡","status":"正常","lat":32.0706768,"lon":118.792323},{"pointId":"P10","photoName":"picture_2026_04_30_15_30_51_768.jpg","photoTime":"2026-04-30T15:30:51Z","startTime":"2026-04-30 15:30:51","endTime":"2026-04-30 15:32:34","category":"岸上-自然草坡","location":"岸上","material":"自然草坡","status":"正常","lat":32.0710581,"lon":118.79209605},{"pointId":"P11","photoName":"picture_2026_04_30_15_35_39_288.jpg","photoTime":"2026-04-30T15:35:39Z","startTime":"2026-04-30 15:35:39","endTime":"2026-04-30 15:37:05","category":"岸上-自然草坡","location":"岸上","material":"自然草坡","status":"正常","lat":32.0716617,"lon":118.7915747},{"pointId":"P12","photoName":"picture_2026_04_30_15_38_21_233.jpg","photoTime":"2026-04-30T15:38:21Z","startTime":"2026-04-30 15:38:21","endTime":"2026-04-30 15:38:52","category":"桥上","location":"桥上","material":"","status":"正常","lat":32.0720059,"lon":118.791224},{"pointId":"P13","photoName":"picture_2026_04_30_15_40_39_434.jpg","photoTime":"2026-04-30T15:40:39Z","startTime":"2026-04-30 15:40:39","endTime":"2026-04-30 15:41:26","category":"岸上-木制","location":"岸上","material":"木制","status":"多张照片","lat":32.0719196,"lon":118.7907604},{"pointId":"P14","photoName":"picture_2026_04_30_15_46_07_051.jpg","photoTime":"2026-04-30T15:46:07Z","startTime":"2026-04-30 15:46:07","endTime":"2026-04-30 15:46:45","category":"岸上-木制","location":"岸上","material":"木制","status":"正常","lat":32.0713899,"lon":118.7898158},{"pointId":"P15","photoName":"picture_2026_04_30_15_48_10_043.jpg","photoTime":"2026-04-30T15:48:10Z","startTime":"2026-04-30 15:48:10","endTime":"2026-04-30 15:49:18","category":"岸上-硬质铺地","location":"岸上","material":"硬质铺地","status":"正常","lat":32.0709684,"lon":118.7893556},{"pointId":"P16","photoName":"picture_2026_04_30_15_50_37_767.jpg","photoTime":"2026-04-30T15:50:37Z","startTime":"2026-04-30 15:50:37","endTime":"2026-04-30 15:51:57","category":"岸上-木制","location":"岸上","material":"木制","status":"正常","lat":32.0710665,"lon":118.7886662},{"pointId":"P17","photoName":"picture_2026_04_30_15_54_53_659.jpg","photoTime":"2026-04-30T15:54:53Z","startTime":"2026-04-30 15:54:53","endTime":"2026-04-30 15:55:28","category":"岸上-木制","location":"岸上","material":"木制","status":"正常","lat":32.0716776,"lon":118.7875308},{"pointId":"P18","photoName":"picture_2026_04_30_15_56_24_512.jpg","photoTime":"2026-04-30T15:56:24Z","startTime":"2026-04-30 15:56:24","endTime":"2026-04-30 15:57:14","category":"岸上-木制","location":"岸上","material":"木制","status":"正常","lat":32.07168,"lon":118.7873169},{"pointId":"P19","photoName":"picture_2026_04_30_16_02_22_855.jpg","photoTime":"2026-04-30T16:02:22Z","startTime":"2026-04-30 16:02:22","endTime":"2026-04-30 16:03:02","category":"岸上-木制","location":"岸上","material":"木制","status":"正常","lat":32.0727392,"lon":118.7855291},{"pointId":"P20","photoName":"picture_2026_04_30_16_07_54_249.jpg","photoTime":"2026-04-30T16:07:54Z","startTime":"2026-04-30 16:07:54","endTime":"2026-04-30 16:08:49","category":"岸上-木制","location":"岸上","material":"木制","status":"正常","lat":32.07218535,"lon":118.7830003},{"pointId":"P21","photoName":"picture_2026_04_30_16_13_59_595.jpg","photoTime":"2026-04-30T16:13:59Z","startTime":"2026-04-30 16:13:59","endTime":null,"category":"岸上-硬质铺地","location":"岸上","material":"硬质铺地","status":"缺失一张照片","lat":32.0700561,"lon":118.7833265},{"pointId":"P22","photoName":"picture_2026_04_30_16_19_17_627.jpg","photoTime":"2026-04-30T16:19:17Z","startTime":"2026-04-30 16:19:17","endTime":"2026-04-30 16:20:07","category":"岸上-硬质铺地","location":"岸上","material":"硬质铺地","status":"正常","lat":32.0689631,"lon":118.7845582},{"pointId":"P23","photoName":"picture_2026_04_30_16_28_27_965.jpg","photoTime":"2026-04-30T16:28:27Z","startTime":"2026-04-30 16:28:27","endTime":"2026-04-30 16:32:09","category":"岸上-木制","location":"岸上","material":"木制","status":"正常","lat":32.06790665,"lon":118.78747345}],"郑智文":[{"pointId":"P01","photoName":"gerImage_17805632236486132915075736527-7260779261061973.jpg","photoTime":null,"startTime":"2026-06-04 16:53:45","endTime":"2026-06-04 16:54:16","category":"桥上","location":"桥上","material":"","status":"正常","lat":32.06495523839243,"lon":118.7926383056029},{"pointId":"P02","photoName":"gerImage_17805633665727266038597757245-8356691995737963.jpg","photoTime":null,"startTime":"2026-06-04 16:56:06","endTime":"2026-06-04 16:57:00","category":"岸上-硬质铺地","location":"岸上","material":"硬质铺地","status":"正常","lat":32.06592219122159,"lon":118.7927858517882},{"pointId":"P03","photoName":"gerImage_17805635263918862972978958215-5785174898024665.jpg","photoTime":null,"startTime":"2026-06-04 16:58:46","endTime":"2026-06-04 16:59:33","category":"桥上","location":"桥上","material":"","status":"正常","lat":32.06667752345147,"lon":118.7929947013074},{"pointId":"P04","photoName":"gerImage_1780563719326348269376796659-6298372989669667.jpg","photoTime":null,"startTime":"2026-06-04 17:01:59","endTime":"2026-06-04 17:02:48","category":"岸上-硬质铺地","location":"岸上","material":"硬质铺地","status":"正常","lat":32.06784617169363,"lon":118.7927652714351},{"pointId":"P05","photoName":"gerImage_17805640864613491019620322197-3056071736551763.jpg","photoTime":null,"startTime":"2026-06-04 17:08:07","endTime":"2026-06-04 17:08:47","category":"岸上-硬质铺地","location":"岸上","material":"硬质铺地","status":"正常","lat":32.07055204550848,"lon":118.792422218389},{"pointId":"P06","photoName":"gerImage_1780564357924960351634099245-6511905622666741.jpg","photoTime":null,"startTime":"2026-06-04 17:12:38","endTime":"2026-06-04 17:13:12","category":"桥上","location":"桥上","material":"","status":"正常","lat":32.07199128719257,"lon":118.7911320165767},{"pointId":"P07","photoName":"gerImage_17805646469954106059415821699-1546411125243169.jpg","photoTime":null,"startTime":"2026-06-04 17:17:27","endTime":"2026-06-04 17:18:01","category":"岸上-硬质铺地","location":"岸上","material":"硬质铺地","status":"正常","lat":32.07094182452526,"lon":118.7890762692016},{"pointId":"P08","photoName":"gerImage_17805648676223708093016447951-6507252537838165.jpg","photoTime":null,"startTime":"2026-06-04 17:21:07","endTime":"2026-06-04 17:21:47","category":"岸上-硬质铺地","location":"岸上","material":"硬质铺地","status":"正常","lat":32.07169380110091,"lon":118.7876129516125},{"pointId":"P09","photoName":"gerImage_17805651964847275456066908093-7335120106092149.jpg","photoTime":null,"startTime":"2026-06-04 17:26:36","endTime":"2026-06-04 17:26:47","category":"岸上-木制","location":"岸上","material":"木制","status":"正常","lat":32.07287574934954,"lon":118.7850750199476},{"pointId":"P10","photoName":"gerImage_17805653446156164834884387167-4895375949813927.jpg","photoTime":null,"startTime":"2026-06-04 17:29:04","endTime":"2026-06-04 17:29:31","category":"岸上-硬质铺地","location":"岸上","material":"硬质铺地","status":"正常","lat":32.07274487063097,"lon":118.7837718223594},{"pointId":"P11","photoName":"gerImage_17805655957512620935719318953-1466928962659533.jpg","photoTime":null,"startTime":"2026-06-04 17:33:16","endTime":"2026-06-04 17:33:45","category":"岸上-硬质铺地","location":"岸上","material":"硬质铺地","status":"正常","lat":32.07130529566582,"lon":118.7830496394326},{"pointId":"P12","photoName":"gerImage_17805657016364848302203567269-6887183001792279.jpg","photoTime":null,"startTime":"2026-06-04 17:35:01","endTime":"2026-06-04 17:35:42","category":"岸上-硬质铺地","location":"岸上","material":"硬质铺地","status":"正常","lat":32.07089641993251,"lon":118.7831326679255},{"pointId":"P13","photoName":"gerImage_17805659327415842518924625309-5201393374789109.jpg","photoTime":null,"startTime":"2026-06-04 17:38:54","endTime":"2026-06-04 17:39:22","category":"岸上-硬质铺地","location":"岸上","material":"硬质铺地","status":"正常","lat":32.07016326097727,"lon":118.7833206148568},{"pointId":"P14","photoName":"gerImage_17805661539892038255182181033-6298453193690939.jpg","photoTime":null,"startTime":"2026-06-04 17:42:34","endTime":"2026-06-04 17:43:09","category":"岸上-自然草坡","location":"岸上","material":"自然草坡","status":"正常","lat":32.06898367148153,"lon":118.7844566257159},{"pointId":"P15","photoName":"gerImage_17805664374476145611527928265-2044067447696937.jpg","photoTime":null,"startTime":"2026-06-04 17:47:17","endTime":"2026-06-04 17:47:53","category":"岸上-自然草坡","location":"岸上","material":"自然草坡","status":"正常","lat":32.06812989087202,"lon":118.7856193942738},{"pointId":"P16","photoName":"gerImage_17805668344524571917778848499-8672380931969489.jpg","photoTime":null,"startTime":"2026-06-04 17:53:56","endTime":"2026-06-04 17:54:27","category":"岸上-木制","location":"岸上","material":"木制","status":"正常","lat":32.06747846480093,"lon":118.789334122398}],"洪煜":[{"pointId":"P01","photoName":"gerImage_1778134593555292906067=839749145.jpg","photoTime":null,"startTime":"2026-05-07 14:16:33","endTime":"2026-05-07 14:17:06","category":"桥上","location":"桥上","material":"","status":"正常","lat":32.065007,"lon":118.792693},{"pointId":"P02","photoName":"gerImage_1778134799467521769508=1204390255.jpg","photoTime":null,"startTime":"2026-05-07 14:19:59","endTime":"2026-05-07 14:20:12","category":"岸上-硬质铺地","location":"岸上","material":"硬质铺地","status":"正常","lat":32.066227,"lon":118.79286},{"pointId":"P03","photoName":"gerImage_1778135062020684922901=986849187.jpg","photoTime":null,"startTime":"2026-05-07 14:24:22","endTime":"2026-05-07 14:24:56","category":"岸上-硬质铺地","location":"岸上","material":"硬质铺地","status":"正常","lat":32.06808,"lon":118.792776},{"pointId":"P04","photoName":"gerImage_17781352296051786454666=974702755.jpg","photoTime":null,"startTime":"2026-05-07 14:27:09","endTime":"2026-05-07 14:28:05","category":"路上","location":"路上","material":"","status":"正常","lat":32.069108,"lon":118.793039},{"pointId":"P05","photoName":"gerImage_17781355155231749234625=335214945.jpg","photoTime":null,"startTime":"2026-05-07 14:31:55","endTime":"2026-05-07 14:32:45","category":"岸上-自然草坡","location":"岸上","material":"自然草坡","status":"正常","lat":32.070592,"lon":118.7923685},{"pointId":"P06","photoName":"gerImage_1778136020308938203554=1562195804.jpg","photoTime":null,"startTime":"2026-05-07 14:40:20","endTime":"2026-05-07 14:41:01","category":"岸上-木制","location":"岸上","material":"木制","status":"正常","lat":32.0709975,"lon":118.7894815},{"pointId":"P07","photoName":"gerImage_1778136291055109651782=376530948.jpg","photoTime":null,"startTime":"2026-05-07 14:44:51","endTime":"2026-05-07 14:45:31","category":"岸上-木制","location":"岸上","material":"木制","status":"正常","lat":32.07166599999999,"lon":118.787371},{"pointId":"P08","photoName":"gerImage_17781370429042021934521=872264319.jpg","photoTime":null,"startTime":"2026-05-07 14:57:22","endTime":"2026-05-07 14:58:31","category":"岸上-硬质铺地","location":"岸上","material":"硬质铺地","status":"正常","lat":32.0700005,"lon":118.7834195},{"pointId":"P09","photoName":"gerImage_1778137611259120079770=1693549857.jpg","photoTime":null,"startTime":"2026-05-07 15:06:51","endTime":"2026-05-07 15:07:52","category":"岸上-木制","location":"岸上","material":"木制","status":"正常","lat":32.06791800000001,"lon":118.787449},{"pointId":"P10","photoName":"gerImage_1778137858569134567467=375137578.jpg","photoTime":null,"startTime":"2026-05-07 15:10:58","endTime":"2026-05-07 15:11:57","category":"岸上-木制","location":"岸上","material":"木制","status":"正常","lat":32.067519,"lon":118.789404},{"pointId":"P11","photoName":"gerImage_1778138019262826012091=1450919229.jpg","photoTime":null,"startTime":"2026-05-07 15:13:39","endTime":"2026-05-07 15:14:25","category":"岸上-硬质铺地","location":"岸上","material":"硬质铺地","status":"正常","lat":32.066717,"lon":118.789764},{"pointId":"P12","photoName":"gerImage_1778138163384615303690=1275357525.jpg","photoTime":null,"startTime":"2026-05-07 15:16:03","endTime":"2026-05-07 15:16:41","category":"岸上-硬质铺地","location":"岸上","material":"硬质铺地","status":"正常","lat":32.066251,"lon":118.790224},{"pointId":"P13","photoName":"gerImage_1778138282421643991465=246971375.jpg","photoTime":null,"startTime":"2026-05-07 15:18:02","endTime":"2026-05-07 15:18:25","category":"岸上-硬质铺地","location":"岸上","material":"硬质铺地","status":"正常","lat":32.065778,"lon":118.7905905}],"周海飞":[{"pointId":"P01","photoName":"picture_2026_05_13_16_54_04_717.jpg","photoTime":"2026-05-13T16:54:04Z","startTime":"2026-05-13 16:53:36","endTime":"2026-05-13 16:54:36","category":"桥上","location":"桥上","material":"","status":"正常","lat":32.0651663,"lon":118.7927205},{"pointId":"P02","photoName":"picture_2026_05_13_16_59_54_096.jpg","photoTime":"2026-05-13T16:59:54Z","startTime":"2026-05-13 16:59:46","endTime":"2026-05-13 17:01:06","category":"岸上-硬质铺地","location":"岸上","material":"硬质铺地","status":"正常","lat":32.0676986,"lon":118.7929372},{"pointId":"P03","photoName":"picture_2026_05_13_17_08_07_126.jpg","photoTime":"2026-05-13T17:08:07Z","startTime":"2026-05-13 17:07:57","endTime":"2026-05-13 17:10:25","category":"岸上-硬质铺地","location":"岸上","material":"硬质铺地","status":"多张照片","lat":32.07089603333333,"lon":118.792147},{"pointId":"P04","photoName":"picture_2026_05_13_17_13_35_764.jpg","photoTime":"2026-05-13T17:13:35Z","startTime":"2026-05-13 17:13:25","endTime":"2026-05-13 17:14:48","category":"桥上","location":"桥上","material":"","status":"正常","lat":32.0720051,"lon":118.7911152},{"pointId":"P05","photoName":"picture_2026_05_13_17_18_07_391.jpg","photoTime":"2026-05-13T17:18:07Z","startTime":"2026-05-13 17:17:57","endTime":"2026-05-13 17:19:49","category":"岸上-硬质铺地","location":"岸上","material":"硬质铺地","status":"正常","lat":32.07133555,"lon":118.78982875},{"pointId":"P06","photoName":"picture_2026_05_13_17_21_53_653.jpg","photoTime":"2026-05-13T17:21:53Z","startTime":"2026-05-13 17:21:43","endTime":"2026-05-13 17:22:58","category":"岸上-木制","location":"岸上","material":"木制","status":"正常","lat":32.0709327,"lon":118.788862},{"pointId":"P07","photoName":"picture_2026_05_13_17_25_32_037.jpg","photoTime":"2026-05-13T17:25:32Z","startTime":"2026-05-13 17:25:24","endTime":"2026-05-13 17:26:50","category":"岸上-木制","location":"岸上","material":"木制","status":"正常","lat":32.071586,"lon":118.7876522},{"pointId":"P08","photoName":"picture_2026_05_13_17_32_04_766.jpg","photoTime":"2026-05-13T17:32:04Z","startTime":"2026-05-13 17:31:57","endTime":"2026-05-13 17:33:07","category":"岸上-木制","location":"岸上","material":"木制","status":"正常","lat":32.072789,"lon":118.7853189},{"pointId":"P09","photoName":"picture_2026_05_13_17_37_51_483.jpg","photoTime":"2026-05-13T17:37:51Z","startTime":"2026-05-13 17:37:45","endTime":"2026-05-13 17:38:48","category":"岸上-木制","location":"岸上","material":"木制","status":"正常","lat":32.0719645,"lon":118.7830374},{"pointId":"P10","photoName":"picture_2026_05_13_17_41_41_962.jpg","photoTime":"2026-05-13T17:41:41Z","startTime":"2026-05-13 17:41:34","endTime":"2026-05-13 17:43:10","category":"岸上-硬质铺地","location":"岸上","material":"硬质铺地","status":"正常","lat":32.0706153,"lon":118.783202},{"pointId":"P11","photoName":"picture_2026_05_13_17_46_24_113.jpg","photoTime":"2026-05-13T17:46:24Z","startTime":"2026-05-13 17:46:16","endTime":"2026-05-13 17:47:37","category":"岸上-自然草坡","location":"岸上","material":"自然草坡","status":"正常","lat":32.0692142,"lon":118.7838569},{"pointId":"P12","photoName":"picture_2026_05_13_17_54_29_599.jpg","photoTime":"2026-05-13T17:54:29Z","startTime":"2026-05-13 17:54:22","endTime":"2026-05-13 17:56:24","category":"岸上-木制","location":"岸上","material":"木制","status":"正常","lat":32.06793930000001,"lon":118.7874465},{"pointId":"P13","photoName":"picture_2026_05_13_18_02_25_816.jpg","photoTime":"2026-05-13T18:02:25Z","startTime":"2026-05-13 18:02:07","endTime":"2026-05-13 18:13:21","category":"岸上-硬质铺地","location":"岸上","material":"硬质铺地","status":"多张照片","lat":32.06656043333334,"lon":118.7899086},{"pointId":"P14","photoName":"picture_2026_05_13_18_18_29_034.jpg","photoTime":"2026-05-13T18:18:29Z","startTime":"2026-05-13 18:18:22","endTime":"2026-05-13 18:20:22","category":"岸上-自然草坡","location":"岸上","material":"自然草坡","status":"正常","lat":32.06506815,"lon":118.7920965}],"冯璐":[{"pointId":"P01","photoName":"pic_1601070378.png","photoTime":null,"startTime":"2026-04-30 15:54:30","endTime":"2026-04-30 15:55:02","category":"桥上","location":"桥上","material":"","status":"正常","lat":32.0644965,"lon":118.792308},{"pointId":"P02","photoName":"pic_1601070381.png","photoTime":null,"startTime":"2026-04-30 15:55:56","endTime":"2026-04-30 15:56:40","category":"桥上","location":"桥上","material":"","status":"正常","lat":32.06469,"lon":118.792614},{"pointId":"P03","photoName":"pic_1601070385.png","photoTime":null,"startTime":"2026-04-30 15:57:43","endTime":"2026-04-30 15:58:11","category":"岸上-硬质铺地","location":"岸上","material":"硬质铺地","status":"正常","lat":32.065168,"lon":118.792698},{"pointId":"P04","photoName":"pic_1601070388.png","photoTime":null,"startTime":"2026-04-30 16:10:41","endTime":"2026-04-30 16:10:50","category":"路上","location":"路上","material":"","status":"正常","lat":32.0704035,"lon":118.7926755},{"pointId":"P05","photoName":"pic_1601070390.png","photoTime":null,"startTime":"2026-04-30 16:14:57","endTime":"2026-04-30 16:17:45","category":"桥上","location":"桥上","material":"","status":"正常","lat":32.072029,"lon":118.791252},{"pointId":"P06","photoName":"pic_1601070395.png","photoTime":null,"startTime":"2026-04-30 16:26:17","endTime":"2026-04-30 16:26:34","category":"路上","location":"路上","material":"","status":"正常","lat":32.072611,"lon":118.785845},{"pointId":"P07","photoName":"pic_1601070399.png","photoTime":null,"startTime":"2026-04-30 16:36:22","endTime":"2026-04-30 16:36:57","category":"岸上-木制","location":"岸上","material":"木制","status":"正常","lat":32.071235,"lon":118.783111},{"pointId":"P08","photoName":"pic_1601070402.png","photoTime":null,"startTime":"2026-04-30 16:38:57","endTime":"2026-04-30 16:40:14","category":"岸上-自然草坡","location":"岸上","material":"自然草坡","status":"多张照片","lat":32.07089233333333,"lon":118.7831566666667},{"pointId":"P09","photoName":"pic_1601070410.png","photoTime":null,"startTime":"2026-04-30 16:46:21","endTime":"2026-04-30 16:46:49","category":"岸上-硬质铺地","location":"岸上","material":"硬质铺地","status":"正常","lat":32.06901,"lon":118.7841395},{"pointId":"P10","photoName":"pic_1601070415.png","photoTime":null,"startTime":"2026-04-30 16:50:29","endTime":"2026-04-30 16:52:47","category":"岸上-硬质铺地","location":"岸上","material":"硬质铺地","status":"正常","lat":32.0681155,"lon":118.785086},{"pointId":"P11","photoName":"pic_1601070417.png","photoTime":null,"startTime":"2026-04-30 17:00:30","endTime":"2026-04-30 17:03:28","category":"岸上-硬质铺地","location":"岸上","material":"硬质铺地","status":"正常","lat":32.067807,"lon":118.788653},{"pointId":"P12","photoName":"pic_1601070419.png","photoTime":null,"startTime":"2026-04-30 17:07:58","endTime":"2026-04-30 17:11:29","category":"岸上-硬质铺地","location":"岸上","material":"硬质铺地","status":"正常","lat":32.066349,"lon":118.790115}],"卢潇月":[{"pointId":"P01","photoName":"picture_2026_04_26_16_21_51_156.jpg","photoTime":"2026-04-26T16:21:51Z","startTime":"2026-04-26 16:21:51","endTime":"2026-04-26 16:22:18","category":"桥上","location":"桥上","material":"","status":"正常","lat":32.0654801,"lon":118.7927295},{"pointId":"P02","photoName":"picture_2026_04_26_16_24_42_908.jpg","photoTime":"2026-04-26T16:24:42Z","startTime":"2026-04-26 16:24:42","endTime":"2026-04-26 16:25:09","category":"桥上","location":"桥上","material":"","status":"正常","lat":32.0666669,"lon":118.7930184},{"pointId":"P03","photoName":"picture_2026_04_26_16_25_28_138.jpg","photoTime":"2026-04-26T16:25:28Z","startTime":"2026-04-26 16:25:28","endTime":"2026-04-26 16:25:52","category":"桥上","location":"桥上","material":"","status":"正常","lat":32.0666669,"lon":118.7930184},{"pointId":"P04","photoName":"picture_2026_04_26_16_27_45_381.jpg","photoTime":"2026-04-26T16:27:45Z","startTime":"2026-04-26 16:27:45","endTime":"2026-04-26 16:28:50","category":"岸上-硬质铺地","location":"岸上","material":"硬质铺地","status":"多张照片","lat":32.0674472,"lon":118.7931051},{"pointId":"P05","photoName":"picture_2026_04_26_16_30_52_315.jpg","photoTime":"2026-04-26T16:30:52Z","startTime":"2026-04-26 16:30:52","endTime":"2026-04-26 16:31:33","category":"岸上-硬质铺地","location":"岸上","material":"硬质铺地","status":"正常","lat":32.068297,"lon":118.7932861},{"pointId":"P06","photoName":"picture_2026_04_26_16_35_00_545.jpg","photoTime":"2026-04-26T16:35:00Z","startTime":"2026-04-26 16:35:00","endTime":"2026-04-26 16:35:38","category":"岸上-自然草坡","location":"岸上","material":"自然草坡","status":"正常","lat":32.0700944,"lon":118.792941},{"pointId":"P07","photoName":"picture_2026_04_26_16_37_31_197.jpg","photoTime":"2026-04-26T16:37:31Z","startTime":"2026-04-26 16:37:31","endTime":null,"category":"岸上-自然草坡","location":"岸上","material":"自然草坡","status":"缺失一张照片","lat":32.0707678,"lon":118.7922633},{"pointId":"P08","photoName":"picture_2026_04_26_16_41_25_941.jpg","photoTime":"2026-04-26T16:41:25Z","startTime":"2026-04-26 16:41:25","endTime":"2026-04-26 16:41:49","category":"岸上-硬质铺地","location":"岸上","material":"硬质铺地","status":"正常","lat":32.0718246,"lon":118.7914357},{"pointId":"P09","photoName":"picture_2026_04_26_16_43_02_886.jpg","photoTime":"2026-04-26T16:43:02Z","startTime":"2026-04-26 16:43:02","endTime":"2026-04-26 16:43:22","category":"桥上","location":"桥上","material":"","status":"正常","lat":32.0719998,"lon":118.79120645},{"pointId":"P10","photoName":"picture_2026_04_26_16_47_29_149.jpg","photoTime":"2026-04-26T16:47:29Z","startTime":"2026-04-26 16:47:29","endTime":"2026-04-26 16:47:56","category":"岸上-木制","location":"岸上","material":"木制","status":"正常","lat":32.0719137,"lon":118.7907965},{"pointId":"P11","photoName":"picture_2026_04_26_16_50_55_329.jpg","photoTime":"2026-04-26T16:50:55Z","startTime":"2026-04-26 16:50:55","endTime":"2026-04-26 16:51:36","category":"岸上-木制","location":"岸上","material":"木制","status":"正常","lat":32.0710455,"lon":118.7895294},{"pointId":"P12","photoName":"picture_2026_04_26_16_55_48_783.jpg","photoTime":"2026-04-26T16:55:48Z","startTime":"2026-04-26 16:55:48","endTime":"2026-04-26 16:56:24","category":"岸上-木制","location":"岸上","material":"木制","status":"正常","lat":32.0715575,"lon":118.7877674},{"pointId":"P13","photoName":"picture_2026_04_26_16_58_37_912.jpg","photoTime":"2026-04-26T16:58:37Z","startTime":"2026-04-26 16:58:37","endTime":"2026-04-26 16:59:29","category":"岸上-硬质铺地","location":"岸上","material":"硬质铺地","status":"正常","lat":32.0722192,"lon":118.7866019},{"pointId":"P14","photoName":"picture_2026_04_26_17_08_38_360.jpg","photoTime":"2026-04-26T17:08:38Z","startTime":"2026-04-26 17:08:38","endTime":"2026-04-26 17:09:09","category":"岸上-硬质铺地","location":"岸上","material":"硬质铺地","status":"正常","lat":32.0708656,"lon":118.7832011},{"pointId":"P15","photoName":"picture_2026_04_26_17_12_03_227.jpg","photoTime":"2026-04-26T17:12:03Z","startTime":"2026-04-26 17:12:03","endTime":"2026-04-26 17:12:33","category":"岸上-硬质铺地","location":"岸上","material":"硬质铺地","status":"正常","lat":32.0697011,"lon":118.7835399},{"pointId":"P16","photoName":"picture_2026_04_26_17_14_14_008.jpg","photoTime":"2026-04-26T17:14:14Z","startTime":"2026-04-26 17:14:14","endTime":"2026-04-26 17:14:47","category":"岸上-自然草坡","location":"岸上","material":"自然草坡","status":"正常","lat":32.0692377,"lon":118.783874},{"pointId":"P17","photoName":"picture_2026_04_26_17_16_14_676.jpg","photoTime":"2026-04-26T17:16:14Z","startTime":"2026-04-26 17:16:14","endTime":"2026-04-26 17:16:55","category":"岸上-硬质铺地","location":"岸上","material":"硬质铺地","status":"正常","lat":32.0689333,"lon":118.7846295},{"pointId":"P18","photoName":"picture_2026_04_26_17_18_44_310.jpg","photoTime":"2026-04-26T17:18:44Z","startTime":"2026-04-26 17:18:44","endTime":"2026-04-26 17:19:29","category":"岸上-硬质铺地","location":"岸上","material":"硬质铺地","status":"正常","lat":32.0681835,"lon":118.784692},{"pointId":"P19","photoName":"picture_2026_04_26_17_20_50_580.jpg","photoTime":"2026-04-26T17:20:50Z","startTime":"2026-04-26 17:20:50","endTime":"2026-04-26 17:21:08","category":"岸上-自然草坡","location":"岸上","material":"自然草坡","status":"正常","lat":32.0682245,"lon":118.7854862},{"pointId":"P20","photoName":"picture_2026_04_26_17_24_30_806.jpg","photoTime":"2026-04-26T17:24:30Z","startTime":"2026-04-26 17:24:30","endTime":"2026-04-26 17:25:07","category":"岸上-木制","location":"岸上","material":"木制","status":"正常","lat":32.0679173,"lon":118.7874074},{"pointId":"P21","photoName":"picture_2026_04_26_17_26_52_179.jpg","photoTime":"2026-04-26T17:26:52Z","startTime":"2026-04-26 17:26:52","endTime":null,"category":"岸上-自然草坡","location":"岸上","material":"自然草坡","status":"缺失一张照片","lat":32.0679291,"lon":118.7881014},{"pointId":"P22","photoName":"picture_2026_04_26_17_29_36_290.jpg","photoTime":"2026-04-26T17:29:36Z","startTime":"2026-04-26 17:29:36","endTime":"2026-04-26 17:30:11","category":"岸上-木制","location":"岸上","material":"木制","status":"正常","lat":32.0673915,"lon":118.789769}],"赵庆卓":[{"pointId":"P01","photoName":"picture_2026_04_26_14_46_22_333.jpg","photoTime":"2026-04-26T14:46:22Z","startTime":"2026-04-26 14:46:19","endTime":"2026-04-26 14:46:45","category":"桥上","location":"桥上","material":"","status":"正常","lat":32.06516045,"lon":118.79273295},{"pointId":"P02","photoName":"picture_2026_04_26_14_47_07_154.jpg","photoTime":"2026-04-26T14:47:07Z","startTime":"2026-04-26 14:47:05","endTime":"2026-04-26 14:47:32","category":"桥上","location":"桥上","material":"","status":"正常","lat":32.0652619,"lon":118.7927371},{"pointId":"P03","photoName":"picture_2026_04_26_14_49_51_481.jpg","photoTime":"2026-04-26T14:49:51Z","startTime":"2026-04-26 14:49:49","endTime":"2026-04-26 14:50:23","category":"桥上","location":"桥上","material":"","status":"正常","lat":32.0665882,"lon":118.7929667},{"pointId":"P04","photoName":"picture_2026_04_26_14_51_50_311.jpg","photoTime":"2026-04-26T14:51:50Z","startTime":"2026-04-26 14:51:49","endTime":"2026-04-26 14:52:22","category":"岸上-硬质铺地","location":"岸上","material":"硬质铺地","status":"正常","lat":32.0672615,"lon":118.7930406},{"pointId":"P05","photoName":"picture_2026_04_26_14_55_25_467.jpg","photoTime":"2026-04-26T14:55:25Z","startTime":"2026-04-26 14:55:22","endTime":"2026-04-26 14:56:06","category":"岸上-硬质铺地","location":"岸上","material":"硬质铺地","status":"正常","lat":32.0681689,"lon":118.7927728},{"pointId":"P06","photoName":"picture_2026_04_26_14_58_52_953.jpg","photoTime":"2026-04-26T14:58:52Z","startTime":"2026-04-26 14:58:51","endTime":"2026-04-26 14:59:27","category":"岸上-自然草坡","location":"岸上","material":"自然草坡","status":"正常","lat":32.0694969,"lon":118.7930407},{"pointId":"P07","photoName":"picture_2026_04_26_15_01_22_726.jpg","photoTime":"2026-04-26T15:01:22Z","startTime":"2026-04-26 15:01:21","endTime":"2026-04-26 15:02:09","category":"岸上-自然草坡","location":"岸上","material":"自然草坡","status":"正常","lat":32.07023975,"lon":118.79279905},{"pointId":"P08","photoName":"picture_2026_04_26_15_07_14_024.jpg","photoTime":"2026-04-26T15:07:14Z","startTime":"2026-04-26 15:07:13","endTime":"2026-04-26 15:07:56","category":"岸上-木制","location":"岸上","material":"木制","status":"正常","lat":32.0719917,"lon":118.7907593},{"pointId":"P09","photoName":"picture_2026_04_26_15_09_55_785.jpg","photoTime":"2026-04-26T15:09:55Z","startTime":"2026-04-26 15:09:54","endTime":"2026-04-26 15:10:35","category":"岸上-硬质铺地","location":"岸上","material":"硬质铺地","status":"正常","lat":32.0714658,"lon":118.7898607},{"pointId":"P10","photoName":"picture_2026_04_26_15_11_59_401.jpg","photoTime":"2026-04-26T15:11:59Z","startTime":"2026-04-26 15:11:58","endTime":"2026-04-26 15:12:57","category":"岸上-木制","location":"岸上","material":"木制","status":"正常","lat":32.0709554,"lon":118.7892769},{"pointId":"P11","photoName":"picture_2026_04_26_15_23_39_503.jpg","photoTime":"2026-04-26T15:23:39Z","startTime":"2026-04-26 15:23:38","endTime":"2026-04-26 15:24:28","category":"岸上-硬质铺地","location":"岸上","material":"硬质铺地","status":"正常","lat":32.07214664999999,"lon":118.7830063},{"pointId":"P12","photoName":"picture_2026_04_26_15_28_42_578.jpg","photoTime":"2026-04-26T15:28:42Z","startTime":"2026-04-26 15:28:41","endTime":"2026-04-26 15:29:24","category":"岸上-硬质铺地","location":"岸上","material":"硬质铺地","status":"正常","lat":32.0698346,"lon":118.783306},{"pointId":"P13","photoName":"picture_2026_04_26_15_31_55_614.jpg","photoTime":"2026-04-26T15:31:55Z","startTime":"2026-04-26 15:31:54","endTime":"2026-04-26 15:32:36","category":"岸上-自然草坡","location":"岸上","material":"自然草坡","status":"正常","lat":32.0690505,"lon":118.7843477},{"pointId":"P14","photoName":"picture_2026_04_26_15_36_30_347.jpg","photoTime":"2026-04-26T15:36:30Z","startTime":"2026-04-26 15:36:29","endTime":"2026-04-26 15:37:36","category":"岸上-自然草坡","location":"岸上","material":"自然草坡","status":"正常","lat":32.0681342,"lon":118.7858349},{"pointId":"P15","photoName":"picture_2026_04_26_15_43_33_143.jpg","photoTime":"2026-04-26T15:43:33Z","startTime":"2026-04-26 15:43:32","endTime":"2026-04-26 15:44:12","category":"岸上-自然草坡","location":"岸上","material":"自然草坡","status":"正常","lat":32.06725305,"lon":118.78951395}],"刘宇轩":[{"pointId":"P01","photoName":"picture_2026_05_12_10_22_22_494.jpg","photoTime":"2026-05-12T10:22:22Z","startTime":"2026-05-12 10:22:20","endTime":"2026-05-12 10:22:40","category":"桥上","location":"桥上","material":"","status":"正常","lat":32.0651092,"lon":118.7927247},{"pointId":"P02","photoName":"picture_2026_05_12_10_23_26_908.jpg","photoTime":"2026-05-12T10:23:26Z","startTime":"2026-05-12 10:23:20","endTime":"2026-05-12 10:24:18","category":"桥上","location":"桥上","material":"","status":"正常","lat":32.06524,"lon":118.7926923},{"pointId":"P03","photoName":"picture_2026_05_12_10_26_18_320.jpg","photoTime":"2026-05-12T10:26:18Z","startTime":"2026-05-12 10:26:16","endTime":"2026-05-12 10:27:25","category":"岸上-硬质铺地","location":"岸上","material":"硬质铺地","status":"正常","lat":32.0662427,"lon":118.7928845},{"pointId":"P04","photoName":"picture_2026_05_12_10_28_43_954.jpg","photoTime":"2026-05-12T10:28:43Z","startTime":"2026-05-12 10:28:38","endTime":"2026-05-12 10:29:09","category":"桥上","location":"桥上","material":"","status":"正常","lat":32.06676915,"lon":118.79301755},{"pointId":"P05","photoName":"picture_2026_05_12_10_30_23_103.jpg","photoTime":"2026-05-12T10:30:23Z","startTime":"2026-05-12 10:30:17","endTime":"2026-05-12 10:31:14","category":"岸上-硬质铺地","location":"岸上","material":"硬质铺地","status":"正常","lat":32.0672628,"lon":118.793109},{"pointId":"P06","photoName":"picture_2026_05_12_10_32_42_136.jpg","photoTime":"2026-05-12T10:32:42Z","startTime":"2026-05-12 10:32:37","endTime":"2026-05-12 10:33:31","category":"岸上-硬质铺地","location":"岸上","material":"硬质铺地","status":"正常","lat":32.0679092,"lon":118.7928842},{"pointId":"P07","photoName":"picture_2026_05_12_10_34_46_607.jpg","photoTime":"2026-05-12T10:34:46Z","startTime":"2026-05-12 10:34:42","endTime":"2026-05-12 10:35:13","category":"岸上-硬质铺地","location":"岸上","material":"硬质铺地","status":"正常","lat":32.0685179,"lon":118.7929511},{"pointId":"P08","photoName":"picture_2026_05_12_10_36_49_337.jpg","photoTime":"2026-05-12T10:36:49Z","startTime":"2026-05-12 10:36:43","endTime":"2026-05-12 10:37:04","category":"桥上","location":"桥上","material":"","status":"正常","lat":32.0691387,"lon":118.7930501},{"pointId":"P09","photoName":"picture_2026_05_12_10_39_01_647.jpg","photoTime":"2026-05-12T10:39:01Z","startTime":"2026-05-12 10:38:57","endTime":"2026-05-12 10:39:35","category":"岸上-硬质铺地","location":"岸上","material":"硬质铺地","status":"正常","lat":32.0700926,"lon":118.7929469},{"pointId":"P10","photoName":"picture_2026_05_12_10_41_14_106.jpg","photoTime":"2026-05-12T10:41:14Z","startTime":"2026-05-12 10:41:09","endTime":"2026-05-12 10:42:19","category":"岸上-硬质铺地","location":"岸上","material":"硬质铺地","status":"正常","lat":32.0706602,"lon":118.7923722},{"pointId":"P11","photoName":"picture_2026_05_12_10_44_14_486.jpg","photoTime":"2026-05-12T10:44:14Z","startTime":"2026-05-12 10:44:09","endTime":"2026-05-12 10:44:35","category":"岸上-硬质铺地","location":"岸上","material":"硬质铺地","status":"正常","lat":32.0714007,"lon":118.7919159},{"pointId":"P12","photoName":"picture_2026_05_12_10_45_58_641.jpg","photoTime":"2026-05-12T10:45:58Z","startTime":"2026-05-12 10:45:57","endTime":"2026-05-12 10:46:20","category":"岸上-自然草坡","location":"岸上","material":"自然草坡","status":"正常","lat":32.0717853,"lon":118.7915746},{"pointId":"P13","photoName":"picture_2026_05_12_10_48_00_664.jpg","photoTime":"2026-05-12T10:48:00Z","startTime":"2026-05-12 10:47:59","endTime":"2026-05-12 10:48:25","category":"桥上","location":"桥上","material":"","status":"正常","lat":32.0720021,"lon":118.7911852},{"pointId":"P14","photoName":"picture_2026_05_12_10_50_21_410.jpg","photoTime":"2026-05-12T10:50:21Z","startTime":"2026-05-12 10:50:20","endTime":"2026-05-12 10:50:44","category":"岸上-木制","location":"岸上","material":"木制","status":"正常","lat":32.0718244,"lon":118.7903359},{"pointId":"P15","photoName":"picture_2026_05_12_10_51_51_600.jpg","photoTime":"2026-05-12T10:51:51Z","startTime":"2026-05-12 10:51:50","endTime":"2026-05-12 10:52:19","category":"岸上-硬质铺地","location":"岸上","material":"硬质铺地","status":"正常","lat":32.0715712,"lon":118.7900001},{"pointId":"P16","photoName":"picture_2026_05_12_10_54_11_585.jpg","photoTime":"2026-05-12T10:54:11Z","startTime":"2026-05-12 10:54:09","endTime":"2026-05-12 10:54:49","category":"岸上-硬质铺地","location":"岸上","material":"硬质铺地","status":"正常","lat":32.0708958,"lon":118.7891171},{"pointId":"P17","photoName":"picture_2026_05_12_10_56_55_369.jpg","photoTime":"2026-05-12T10:56:55Z","startTime":"2026-05-12 10:56:53","endTime":"2026-05-12 10:57:18","category":"岸上-硬质铺地","location":"岸上","material":"硬质铺地","status":"正常","lat":32.0712299,"lon":118.788329},{"pointId":"P18","photoName":"picture_2026_05_12_10_59_22_206.jpg","photoTime":"2026-05-12T10:59:22Z","startTime":"2026-05-12 10:59:21","endTime":"2026-05-12 10:59:38","category":"岸上-木制","location":"岸上","material":"木制","status":"正常","lat":32.0717557,"lon":118.7873827},{"pointId":"P19","photoName":"picture_2026_05_12_11_01_12_853.jpg","photoTime":"2026-05-12T11:01:12Z","startTime":"2026-05-12 11:01:11","endTime":"2026-05-12 11:01:34","category":"岸上-硬质铺地","location":"岸上","material":"硬质铺地","status":"正常","lat":32.0722025,"lon":118.7865644},{"pointId":"P20","photoName":"picture_2026_05_12_11_09_42_751.jpg","photoTime":"2026-05-12T11:09:42Z","startTime":"2026-05-12 11:09:41","endTime":"2026-05-12 11:10:16","category":"岸上-木制","location":"岸上","material":"木制","status":"正常","lat":32.0712781,"lon":118.78314535},{"pointId":"P21","photoName":"picture_2026_05_12_11_13_12_335.jpg","photoTime":"2026-05-12T11:13:12Z","startTime":"2026-05-12 11:13:11","endTime":"2026-05-12 11:18:45","category":"岸上-硬质铺地","location":"岸上","material":"硬质铺地","status":"正常","lat":32.07006,"lon":118.78339065},{"pointId":"P22","photoName":"picture_2026_05_12_11_21_38_408.jpg","photoTime":"2026-05-12T11:21:38Z","startTime":"2026-05-12 11:21:36","endTime":"2026-05-12 11:21:46","category":"岸上-木制","location":"岸上","material":"木制","status":"正常","lat":32.0691471,"lon":118.7842885},{"pointId":"P23","photoName":"picture_2026_05_12_11_23_03_990.jpg","photoTime":"2026-05-12T11:23:03Z","startTime":"2026-05-12 11:23:02","endTime":"2026-05-12 11:23:13","category":"岸上-硬质铺地","location":"岸上","material":"硬质铺地","status":"正常","lat":32.0689621,"lon":118.7845792},{"pointId":"P24","photoName":"picture_2026_05_12_11_28_57_423.jpg","photoTime":"2026-05-12T11:28:57Z","startTime":"2026-05-12 11:28:56","endTime":"2026-05-12 11:29:07","category":"岸上-木制","location":"岸上","material":"木制","status":"正常","lat":32.0678927,"lon":118.7873288},{"pointId":"P25","photoName":"picture_2026_05_12_11_33_48_860.jpg","photoTime":"2026-05-12T11:33:48Z","startTime":"2026-05-12 11:33:47","endTime":"2026-05-12 11:34:13","category":"岸上-硬质铺地","location":"岸上","material":"硬质铺地","status":"正常","lat":32.0670073,"lon":118.7895985}],"张一鸣":[{"pointId":"P01","photoName":"picture_2026_04_24_14_30_31_805.jpg","photoTime":"2026-04-24T14:30:31Z","startTime":"2026-04-24 14:30:31","endTime":"2026-04-24 14:31:26","category":"桥上","location":"桥上","material":"","status":"正常","lat":32.0651133,"lon":118.7926239},{"pointId":"P02","photoName":"picture_2026_04_24_14_32_03_296.jpg","photoTime":"2026-04-24T14:32:03Z","startTime":"2026-04-24 14:32:03","endTime":"2026-04-24 14:33:00","category":"桥上","location":"桥上","material":"","status":"正常","lat":32.0652736,"lon":118.7927252},{"pointId":"P03","photoName":"picture_2026_04_24_14_34_49_925.jpg","photoTime":"2026-04-24T14:34:49Z","startTime":"2026-04-24 14:34:49","endTime":"2026-04-24 14:35:47","category":"岸上-硬质铺地","location":"岸上","material":"硬质铺地","status":"正常","lat":32.0662654,"lon":118.7928394},{"pointId":"P04","photoName":"picture_2026_04_24_14_38_15_596.jpg","photoTime":"2026-04-24T14:38:15Z","startTime":"2026-04-24 14:38:15","endTime":"2026-04-24 14:39:21","category":"岸上-硬质铺地","location":"岸上","material":"硬质铺地","status":"正常","lat":32.067177,"lon":118.7930493},{"pointId":"P05","photoName":"picture_2026_04_24_14_42_35_328.jpg","photoTime":"2026-04-24T14:42:35Z","startTime":"2026-04-24 14:42:35","endTime":"2026-04-24 14:42:49","category":"路上","location":"路上","material":"","status":"正常","lat":32.0689193,"lon":118.7930233},{"pointId":"P06","photoName":"picture_2026_04_24_14_45_07_427.jpg","photoTime":"2026-04-24T14:45:07Z","startTime":"2026-04-24 14:45:07","endTime":"2026-04-24 14:45:57","category":"岸上-自然草坡","location":"岸上","material":"自然草坡","status":"正常","lat":32.0700858,"lon":118.7929058},{"pointId":"P07","photoName":"picture_2026_04_24_14_48_05_268.jpg","photoTime":"2026-04-24T14:48:05Z","startTime":"2026-04-24 14:48:05","endTime":"2026-04-24 14:49:00","category":"岸上-自然草坡","location":"岸上","material":"自然草坡","status":"正常","lat":32.070899,"lon":118.7922264},{"pointId":"P08","photoName":"picture_2026_04_24_14_51_32_506.jpg","photoTime":"2026-04-24T14:51:32Z","startTime":"2026-04-24 14:51:32","endTime":"2026-04-24 14:52:02","category":"岸上-硬质铺地","location":"岸上","material":"硬质铺地","status":"正常","lat":32.0718995,"lon":118.7914848},{"pointId":"P09","photoName":"picture_2026_04_24_14_53_32_947.jpg","photoTime":"2026-04-24T14:53:32Z","startTime":"2026-04-24 14:53:32","endTime":"2026-04-24 14:54:14","category":"岸上-木制","location":"岸上","material":"木制","status":"正常","lat":32.0719682,"lon":118.7908211},{"pointId":"P10","photoName":"picture_2026_04_24_14_55_12_230.jpg","photoTime":"2026-04-24T14:55:12Z","startTime":"2026-04-24 14:55:12","endTime":"2026-04-24 14:55:41","category":"岸上-木制","location":"岸上","material":"木制","status":"正常","lat":32.071821,"lon":118.7904057},{"pointId":"P11","photoName":"picture_2026_04_24_14_56_06_566.jpg","photoTime":"2026-04-24T14:56:06Z","startTime":"2026-04-24 14:56:06","endTime":"2026-04-24 14:56:43","category":"岸上-硬质铺地","location":"岸上","material":"硬质铺地","status":"正常","lat":32.0717763,"lon":118.7902096},{"pointId":"P12","photoName":"picture_2026_04_24_14_57_26_717.jpg","photoTime":"2026-04-24T14:57:26Z","startTime":"2026-04-24 14:57:26","endTime":"2026-04-24 14:58:09","category":"岸上-硬质铺地","location":"岸上","material":"硬质铺地","status":"正常","lat":32.0714709,"lon":118.7899116},{"pointId":"P13","photoName":"picture_2026_04_24_14_59_13_727.jpg","photoTime":"2026-04-24T14:59:13Z","startTime":"2026-04-24 14:59:13","endTime":"2026-04-24 14:59:43","category":"岸上-硬质铺地","location":"岸上","material":"硬质铺地","status":"正常","lat":32.0712105,"lon":118.7896182},{"pointId":"P14","photoName":"picture_2026_04_24_15_00_35_276.jpg","photoTime":"2026-04-24T15:00:35Z","startTime":"2026-04-24 15:00:35","endTime":"2026-04-24 15:01:31","category":"岸上-硬质铺地","location":"岸上","material":"硬质铺地","status":"正常","lat":32.0709445,"lon":118.7892587},{"pointId":"P15","photoName":"picture_2026_04_24_15_06_42_158.jpg","photoTime":"2026-04-24T15:06:42Z","startTime":"2026-04-24 15:06:42","endTime":null,"category":"岸上-硬质铺地","location":"岸上","material":"硬质铺地","status":"缺失一张照片","lat":32.0723709,"lon":118.7864096},{"pointId":"P16","photoName":"picture_2026_04_24_15_12_59_415.jpg","photoTime":"2026-04-24T15:12:59Z","startTime":"2026-04-24 15:12:59","endTime":null,"category":"岸上-硬质铺地","location":"岸上","material":"硬质铺地","status":"缺失一张照片","lat":32.0721445,"lon":118.7829678},{"pointId":"P17","photoName":"picture_2026_04_24_15_19_06_527.jpg","photoTime":"2026-04-24T15:19:06Z","startTime":"2026-04-24 15:19:06","endTime":"2026-04-24 15:21:33","category":"岸上-自然草坡","location":"岸上","material":"自然草坡","status":"正常","lat":32.0693553,"lon":118.78355645},{"pointId":"P18","photoName":"picture_2026_04_24_15_26_55_934.jpg","photoTime":"2026-04-24T15:26:55Z","startTime":"2026-04-24 15:26:55","endTime":"2026-04-24 15:27:58","category":"岸上-自然草坡","location":"岸上","material":"自然草坡","status":"正常","lat":32.0680809,"lon":118.7859508},{"pointId":"P19","photoName":"picture_2026_04_24_15_35_32_613.jpg","photoTime":"2026-04-24T15:35:32Z","startTime":"2026-04-24 15:35:32","endTime":"2026-04-24 15:36:04","category":"岸上-硬质铺地","location":"岸上","material":"硬质铺地","status":"正常","lat":32.0663507,"lon":118.7900946}],"朱涛":[{"pointId":"P01","photoName":"picture_2026_06_05_15_20_59_237.jpg","photoTime":"2026-06-05T15:20:59Z","startTime":"2026-06-05 15:20:57","endTime":"2026-06-05 15:22:20","category":"桥上","location":"桥上","material":"","status":"正常","lat":32.0666962,"lon":118.7929321},{"pointId":"P02","photoName":"picture_2026_06_05_15_23_46_033.jpg","photoTime":"2026-06-05T15:23:46Z","startTime":"2026-06-05 15:23:44","endTime":"2026-06-05 15:25:57","category":"岸上-硬质铺地","location":"岸上","material":"硬质铺地","status":"正常","lat":32.06725445,"lon":118.79318235},{"pointId":"P03","photoName":"picture_2026_06_05_15_31_08_636.jpg","photoTime":"2026-06-05T15:31:08Z","startTime":"2026-06-05 15:31:07","endTime":"2026-06-05 15:32:46","category":"岸上-木制","location":"岸上","material":"木制","status":"正常","lat":32.0700893,"lon":118.79328285},{"pointId":"P04","photoName":"picture_2026_06_05_15_35_48_670.jpg","photoTime":"2026-06-05T15:35:48Z","startTime":"2026-06-05 15:35:47","endTime":"2026-06-05 15:38:54","category":"岸上-硬质铺地","location":"岸上","material":"硬质铺地","status":"正常","lat":32.07139275,"lon":118.79194615},{"pointId":"P05","photoName":"picture_2026_06_05_15_44_27_385.jpg","photoTime":"2026-06-05T15:44:27Z","startTime":"2026-06-05 15:44:25","endTime":"2026-06-05 15:47:00","category":"岸上-硬质铺地","location":"岸上","material":"硬质铺地","status":"正常","lat":32.07099239999999,"lon":118.78926215},{"pointId":"P06","photoName":"picture_2026_06_05_15_52_16_648.jpg","photoTime":"2026-06-05T15:52:16Z","startTime":"2026-06-05 15:52:15","endTime":"2026-06-05 15:55:04","category":"岸上-硬质铺地","location":"岸上","material":"硬质铺地","status":"正常","lat":32.0724742,"lon":118.78612395},{"pointId":"P07","photoName":"picture_2026_06_05_16_04_25_978.jpg","photoTime":"2026-06-05T16:04:25Z","startTime":"2026-06-05 16:04:24","endTime":"2026-06-05 16:06:17","category":"岸上-自然草坡","location":"岸上","material":"自然草坡","status":"正常","lat":32.0693229,"lon":118.78369455},{"pointId":"P08","photoName":"picture_2026_06_05_16_08_07_086.jpg","photoTime":"2026-06-05T16:08:07Z","startTime":"2026-06-05 16:08:06","endTime":"2026-06-05 16:09:42","category":"岸上-硬质铺地","location":"岸上","material":"硬质铺地","status":"正常","lat":32.06863795,"lon":118.78457325},{"pointId":"P09","photoName":"picture_2026_06_05_16_14_08_587.jpg","photoTime":"2026-06-05T16:14:08Z","startTime":"2026-06-05 16:14:07","endTime":"2026-06-05 16:18:23","category":"岸上-木制","location":"岸上","material":"木制","status":"正常","lat":32.0679531,"lon":118.78738535}],"李明轩":[{"pointId":"P01","photoName":"picture_2026_06_02_10_12_05_927.jpg","photoTime":"2026-06-02T10:12:05Z","startTime":"2026-06-02 10:12:05","endTime":"2026-06-02 10:13:20","category":"岸上-硬质铺地","location":"岸上","material":"硬质铺地","status":"正常","lat":32.0658058,"lon":118.7928375},{"pointId":"P02","photoName":"picture_2026_06_02_10_15_27_164.jpg","photoTime":"2026-06-02T10:15:27Z","startTime":"2026-06-02 10:15:27","endTime":"2026-06-02 10:16:38","category":"桥上","location":"桥上","material":"","status":"正常","lat":32.0667023,"lon":118.7929732},{"pointId":"P03","photoName":"picture_2026_06_02_10_18_52_613.jpg","photoTime":"2026-06-02T10:18:52Z","startTime":"2026-06-02 10:18:52","endTime":"2026-06-02 10:20:22","category":"岸上-硬质铺地","location":"岸上","material":"硬质铺地","status":"正常","lat":32.0676709,"lon":118.7929244},{"pointId":"P04","photoName":"picture_2026_06_02_10_26_26_469.jpg","photoTime":"2026-06-02T10:26:26Z","startTime":"2026-06-02 10:26:26","endTime":"2026-06-02 10:27:40","category":"岸上-木制","location":"岸上","material":"木制","status":"正常","lat":32.070422,"lon":118.7924793},{"pointId":"P05","photoName":"picture_2026_06_02_10_33_44_189.jpg","photoTime":"2026-06-02T10:33:44Z","startTime":"2026-06-02 10:33:44","endTime":"2026-06-02 10:36:19","category":"岸上-硬质铺地","location":"岸上","material":"硬质铺地","status":"正常","lat":32.07143595,"lon":118.7898845},{"pointId":"P06","photoName":"picture_2026_06_02_10_40_59_624.jpg","photoTime":"2026-06-02T10:40:59Z","startTime":"2026-06-02 10:40:59","endTime":"2026-06-02 10:42:53","category":"岸上-木制","location":"岸上","material":"木制","status":"正常","lat":32.07169655,"lon":118.787419},{"pointId":"P07","photoName":"picture_2026_06_02_10_51_14_965.jpg","photoTime":"2026-06-02T10:51:14Z","startTime":"2026-06-02 10:51:14","endTime":"2026-06-02 10:52:35","category":"岸上-木制","location":"岸上","material":"木制","status":"正常","lat":32.071959,"lon":118.7829759},{"pointId":"P08","photoName":"picture_2026_06_02_10_56_23_652.jpg","photoTime":"2026-06-02T10:56:23Z","startTime":"2026-06-02 10:56:23","endTime":"2026-06-02 10:58:40","category":"岸上-硬质铺地","location":"岸上","material":"硬质铺地","status":"正常","lat":32.07008065,"lon":118.78330075},{"pointId":"P09","photoName":"picture_2026_06_02_11_04_48_359.jpg","photoTime":"2026-06-02T11:04:48Z","startTime":"2026-06-02 11:04:48","endTime":"2026-06-02 11:10:22","category":"岸上-硬质铺地","location":"岸上","material":"硬质铺地","status":"正常","lat":32.0689651,"lon":118.78455735},{"pointId":"P10","photoName":"picture_2026_06_02_11_17_07_101.jpg","photoTime":"2026-06-02T11:17:07Z","startTime":"2026-06-02 11:17:07","endTime":"2026-06-02 11:19:41","category":"岸上-木制","location":"岸上","material":"木制","status":"正常","lat":32.06791065,"lon":118.78732725}],"汪飞宇":[{"pointId":"P01","photoName":"picture_2026_05_17_16_30_41_276.jpg","photoTime":"2026-05-17T16:30:41Z","startTime":"2026-05-17 16:30:41","endTime":"2026-05-17 16:32:18","category":"桥上","location":"桥上","material":"","status":"多张照片","lat":32.0651734,"lon":118.792698275},{"pointId":"P02","photoName":"picture_2026_05_17_16_36_28_533.jpg","photoTime":"2026-05-17T16:36:28Z","startTime":"2026-05-17 16:36:28","endTime":"2026-05-17 16:36:50","category":"桥上","location":"桥上","material":"","status":"正常","lat":32.0666761,"lon":118.7930132},{"pointId":"P03","photoName":"picture_2026_05_17_16_39_12_859.jpg","photoTime":"2026-05-17T16:39:12Z","startTime":"2026-05-17 16:39:12","endTime":"2026-05-17 16:39:42","category":"桥上","location":"桥上","material":"","status":"正常","lat":32.067644,"lon":118.7929823},{"pointId":"P04","photoName":"picture_2026_05_17_16_44_43_750.jpg","photoTime":"2026-05-17T16:44:43Z","startTime":"2026-05-17 16:44:43","endTime":null,"category":"岸上-硬质铺地","location":"岸上","material":"硬质铺地","status":"缺失一张照片","lat":32.0693835,"lon":118.7931211},{"pointId":"P05","photoName":"picture_2026_05_17_16_46_24_803.jpg","photoTime":"2026-05-17T16:46:24Z","startTime":"2026-05-17 16:46:24","endTime":null,"category":"岸上-硬质铺地","location":"岸上","material":"硬质铺地","status":"缺失一张照片","lat":32.0697972,"lon":118.7932806},{"pointId":"P06","photoName":"picture_2026_05_17_16_54_23_101.jpg","photoTime":"2026-05-17T16:54:23Z","startTime":"2026-05-17 16:54:23","endTime":"2026-05-17 16:55:24","category":"桥上","location":"桥上","material":"","status":"正常","lat":32.0720746,"lon":118.7911812},{"pointId":"P07","photoName":"picture_2026_05_17_16_58_09_704.jpg","photoTime":"2026-05-17T16:58:09Z","startTime":"2026-05-17 16:58:09","endTime":"2026-05-17 17:03:59","category":"岸上-硬质铺地","location":"岸上","material":"硬质铺地","status":"正常","lat":32.07161455,"lon":118.79007595},{"pointId":"P08","photoName":"picture_2026_05_17_17_21_28_908.jpg","photoTime":"2026-05-17T17:21:28Z","startTime":"2026-05-17 17:21:28","endTime":"2026-05-17 17:23:32","category":"岸上-硬质铺地","location":"岸上","material":"硬质铺地","status":"正常","lat":32.0713094,"lon":118.7828763},{"pointId":"P09","photoName":"picture_2026_05_17_17_27_07_103.jpg","photoTime":"2026-05-17T17:27:07Z","startTime":"2026-05-17 17:27:07","endTime":"2026-05-17 17:29:43","category":"岸上-硬质铺地","location":"岸上","material":"硬质铺地","status":"正常","lat":32.07009715,"lon":118.78334595},{"pointId":"P10","photoName":"picture_2026_05_17_17_34_11_931.jpg","photoTime":"2026-05-17T17:34:11Z","startTime":"2026-05-17 17:34:11","endTime":"2026-05-17 17:35:01","category":"岸上-硬质铺地","location":"岸上","material":"硬质铺地","status":"正常","lat":32.0688795,"lon":118.7842547},{"pointId":"P11","photoName":"picture_2026_05_17_17_44_01_656.jpg","photoTime":"2026-05-17T17:44:01Z","startTime":"2026-05-17 17:44:01","endTime":null,"category":"岸上-硬质铺地","location":"岸上","material":"硬质铺地","status":"缺失一张照片","lat":32.0679647,"lon":118.7865636},{"pointId":"P12","photoName":"picture_2026_05_17_17_46_37_402.jpg","photoTime":"2026-05-17T17:46:37Z","startTime":"2026-05-17 17:46:37","endTime":"2026-05-17 18:10:18","category":"岸上-木制","location":"岸上","material":"木制","status":"正常","lat":32.06792905,"lon":118.78748805},{"pointId":"P13","photoName":"picture_2026_05_17_18_13_52_649.jpg","photoTime":"2026-05-17T18:13:52Z","startTime":"2026-05-17 18:13:52","endTime":null,"category":"岸上-木制","location":"岸上","material":"木制","status":"缺失一张照片","lat":32.0674576,"lon":118.7893597}],"王一霖":[{"pointId":"P01","photoName":"picture_2026_06_05_15_17_30_337.jpg","photoTime":"2026-06-05T15:17:30Z","startTime":"2026-06-05 15:17:30","endTime":"2026-06-05 15:18:32","category":"桥上","location":"桥上","material":"","status":"正常","lat":32.0651951,"lon":118.7926611},{"pointId":"P02","photoName":"picture_2026_06_05_15_21_34_367.jpg","photoTime":"2026-06-05T15:21:34Z","startTime":"2026-06-05 15:21:34","endTime":"2026-06-05 15:22:19","category":"岸上-硬质铺地","location":"岸上","material":"硬质铺地","status":"正常","lat":32.0666727,"lon":118.7928884},{"pointId":"P03","photoName":"picture_2026_06_05_15_33_29_319.jpg","photoTime":"2026-06-05T15:33:29Z","startTime":"2026-06-05 15:33:29","endTime":"2026-06-05 15:34:19","category":"路上","location":"路上","material":"","status":"正常","lat":32.0719545,"lon":118.791342},{"pointId":"P04","photoName":"picture_2026_06_05_15_36_57_513.jpg","photoTime":"2026-06-05T15:36:57Z","startTime":"2026-06-05 15:36:57","endTime":"2026-06-05 15:37:51","category":"岸上-硬质铺地","location":"岸上","material":"硬质铺地","status":"正常","lat":32.0718211,"lon":118.7902305},{"pointId":"P05","photoName":"picture_2026_06_05_15_39_43_063.jpg","photoTime":"2026-06-05T15:39:43Z","startTime":"2026-06-05 15:39:43","endTime":"2026-06-05 15:40:41","category":"岸上-木制","location":"岸上","material":"木制","status":"正常","lat":32.0710157,"lon":118.7893568},{"pointId":"P06","photoName":"picture_2026_06_05_15_45_25_154.jpg","photoTime":"2026-06-05T15:45:25Z","startTime":"2026-06-05 15:45:25","endTime":"2026-06-05 15:46:20","category":"岸上-硬质铺地","location":"岸上","material":"硬质铺地","status":"正常","lat":32.0718259,"lon":118.7872452},{"pointId":"P07","photoName":"picture_2026_06_05_15_59_53_452.jpg","photoTime":"2026-06-05T15:59:53Z","startTime":"2026-06-05 15:59:53","endTime":"2026-06-05 16:00:44","category":"岸上-木制","location":"岸上","material":"木制","status":"正常","lat":32.0719716,"lon":118.7830103},{"pointId":"P08","photoName":"picture_2026_06_05_16_04_53_263.jpg","photoTime":"2026-06-05T16:04:53Z","startTime":"2026-06-05 16:04:53","endTime":"2026-06-05 16:06:35","category":"岸上-硬质铺地","location":"岸上","material":"硬质铺地","status":"正常","lat":32.07006455,"lon":118.783426},{"pointId":"P09","photoName":"picture_2026_06_05_16_14_22_731.jpg","photoTime":"2026-06-05T16:14:22Z","startTime":"2026-06-05 16:14:22","endTime":"2026-06-05 16:15:23","category":"岸上-硬质铺地","location":"岸上","material":"硬质铺地","status":"正常","lat":32.0681555,"lon":118.7861272},{"pointId":"P10","photoName":"picture_2026_06_05_16_18_12_204.jpg","photoTime":"2026-06-05T16:18:12Z","startTime":"2026-06-05 16:18:12","endTime":"2026-06-05 16:18:50","category":"岸上-木制","location":"岸上","material":"木制","status":"正常","lat":32.0679223,"lon":118.7873801},{"pointId":"P11","photoName":"picture_2026_06_05_16_25_12_590.jpg","photoTime":"2026-06-05T16:25:12Z","startTime":"2026-06-05 16:25:12","endTime":"2026-06-05 16:27:11","category":"岸上-硬质铺地","location":"岸上","material":"硬质铺地","status":"正常","lat":32.0664466,"lon":118.7901105}],"谢祺旸":[{"pointId":"P01","photoName":"picture_2026_06_03_10_18_17_102.jpg","photoTime":"2026-06-03T10:18:17Z","startTime":"2026-06-03 10:18:17","endTime":"2026-06-03 10:19:31","category":"桥上","location":"桥上","material":"","status":"正常","lat":32.0651123,"lon":118.7927103},{"pointId":"P02","photoName":"picture_2026_06_03_10_22_00_180.jpg","photoTime":"2026-06-03T10:22:00Z","startTime":"2026-06-03 10:22:00","endTime":"2026-06-03 10:23:29","category":"岸上-硬质铺地","location":"岸上","material":"硬质铺地","status":"正常","lat":32.066232,"lon":118.7927734},{"pointId":"P03","photoName":"picture_2026_06_03_10_25_01_354.jpg","photoTime":"2026-06-03T10:25:01Z","startTime":"2026-06-03 10:25:01","endTime":"2026-06-03 10:26:28","category":"岸上-硬质铺地","location":"岸上","material":"硬质铺地","status":"正常","lat":32.066688,"lon":118.7929204},{"pointId":"P04","photoName":"picture_2026_06_03_10_30_32_463.jpg","photoTime":"2026-06-03T10:30:32Z","startTime":"2026-06-03 10:30:32","endTime":"2026-06-03 10:33:05","category":"岸上-硬质铺地","location":"岸上","material":"硬质铺地","status":"多张照片","lat":32.06784583333334,"lon":118.7927000666667},{"pointId":"P05","photoName":"picture_2026_06_03_10_35_51_201.jpg","photoTime":"2026-06-03T10:35:51Z","startTime":"2026-06-03 10:35:51","endTime":"2026-06-03 10:38:18","category":"岸上-硬质铺地","location":"岸上","material":"硬质铺地","status":"正常","lat":32.06890855,"lon":118.79308155},{"pointId":"P06","photoName":"picture_2026_06_03_10_42_48_954.jpg","photoTime":"2026-06-03T10:42:48Z","startTime":"2026-06-03 10:42:48","endTime":"2026-06-03 10:44:16","category":"岸上-自然草坡","location":"岸上","material":"自然草坡","status":"正常","lat":32.0705747,"lon":118.7922726},{"pointId":"P07","photoName":"picture_2026_06_03_10_48_38_059.jpg","photoTime":"2026-06-03T10:48:38Z","startTime":"2026-06-03 10:48:38","endTime":"2026-06-03 10:50:06","category":"桥上","location":"桥上","material":"","status":"正常","lat":32.0720002,"lon":118.7911456},{"pointId":"P08","photoName":"picture_2026_06_03_10_52_13_370.jpg","photoTime":"2026-06-03T10:52:13Z","startTime":"2026-06-03 10:52:13","endTime":"2026-06-03 10:53:18","category":"岸上-硬质铺地","location":"岸上","material":"硬质铺地","status":"正常","lat":32.0723225,"lon":118.7909035},{"pointId":"P09","photoName":"picture_2026_06_03_10_55_30_782.jpg","photoTime":"2026-06-03T10:55:30Z","startTime":"2026-06-03 10:55:30","endTime":"2026-06-03 10:56:44","category":"岸上-硬质铺地","location":"岸上","material":"硬质铺地","status":"正常","lat":32.07176,"lon":118.7902647},{"pointId":"P10","photoName":"picture_2026_06_03_10_59_40_572.jpg","photoTime":"2026-06-03T10:59:40Z","startTime":"2026-06-03 10:59:40","endTime":"2026-06-03 11:01:13","category":"岸上-木制","location":"岸上","material":"木制","status":"正常","lat":32.0709227,"lon":118.7893238},{"pointId":"P11","photoName":"picture_2026_06_03_11_04_21_264.jpg","photoTime":"2026-06-03T11:04:21Z","startTime":"2026-06-03 11:04:21","endTime":"2026-06-03 11:06:03","category":"岸上-木制","location":"岸上","material":"木制","status":"正常","lat":32.0714539,"lon":118.7878919},{"pointId":"P12","photoName":"picture_2026_06_03_11_14_13_076.jpg","photoTime":"2026-06-03T11:14:13Z","startTime":"2026-06-03 11:14:13","endTime":"2026-06-03 11:15:32","category":"岸上-硬质铺地","location":"岸上","material":"硬质铺地","status":"正常","lat":32.0728669,"lon":118.7843444},{"pointId":"P13","photoName":"picture_2026_06_03_11_21_22_634.jpg","photoTime":"2026-06-03T11:21:22Z","startTime":"2026-06-03 11:21:22","endTime":null,"category":"岸上-木制","location":"岸上","material":"木制","status":"缺失一张照片","lat":32.0719725,"lon":118.7830015},{"pointId":"P14","photoName":"picture_2026_06_03_11_30_19_715.jpg","photoTime":"2026-06-03T11:30:19Z","startTime":"2026-06-03 11:30:19","endTime":"2026-06-03 11:32:06","category":"岸上-硬质铺地","location":"岸上","material":"硬质铺地","status":"正常","lat":32.0689727,"lon":118.78462415},{"pointId":"P15","photoName":"picture_2026_06_03_11_38_40_654.jpg","photoTime":"2026-06-03T11:38:40Z","startTime":"2026-06-03 11:38:40","endTime":"2026-06-03 11:39:48","category":"岸上-木制","location":"岸上","material":"木制","status":"正常","lat":32.0679355,"lon":118.7874501},{"pointId":"P16","photoName":"picture_2026_06_03_11_46_03_505.jpg","photoTime":"2026-06-03T11:46:03Z","startTime":"2026-06-03 11:46:03","endTime":"2026-06-03 11:48:31","category":"岸上-硬质铺地","location":"岸上","material":"硬质铺地","status":"正常","lat":32.06612490000001,"lon":118.79033595}],"陈言":[{"pointId":"P01","photoName":"picture_2026_05_12_10_16_16_940.jpg","photoTime":"2026-05-12T10:16:16Z","startTime":"2026-05-12 10:16:16","endTime":"2026-05-12 10:18:01","category":"岸上-硬质铺地","location":"岸上","material":"硬质铺地","status":"正常","lat":32.0672236,"lon":118.79307485},{"pointId":"P02","photoName":"picture_2026_05_12_10_24_06_873.jpg","photoTime":"2026-05-12T10:24:06Z","startTime":"2026-05-12 10:24:06","endTime":"2026-05-12 10:24:39","category":"岸上-自然草坡","location":"岸上","material":"自然草坡","status":"正常","lat":32.070637,"lon":118.7923032},{"pointId":"P03","photoName":"picture_2026_05_12_10_36_28_050.jpg","photoTime":"2026-05-12T10:36:28Z","startTime":"2026-05-12 10:36:28","endTime":"2026-05-12 10:37:04","category":"岸上-硬质铺地","location":"岸上","material":"硬质铺地","status":"正常","lat":32.0712513,"lon":118.7882432},{"pointId":"P04","photoName":"picture_2026_05_12_10_39_10_129.jpg","photoTime":"2026-05-12T10:39:10Z","startTime":"2026-05-12 10:39:10","endTime":"2026-05-12 10:39:35","category":"岸上-木制","location":"岸上","material":"木制","status":"正常","lat":32.0717381,"lon":118.7873327},{"pointId":"P05","photoName":"picture_2026_05_12_10_44_37_059.jpg","photoTime":"2026-05-12T10:44:37Z","startTime":"2026-05-12 10:44:37","endTime":"2026-05-12 10:45:31","category":"岸上-硬质铺地","location":"岸上","material":"硬质铺地","status":"多张照片","lat":32.0729005,"lon":118.784391},{"pointId":"P06","photoName":"picture_2026_05_12_10_51_22_179.jpg","photoTime":"2026-05-12T10:51:22Z","startTime":"2026-05-12 10:51:22","endTime":"2026-05-12 10:52:09","category":"岸上-木制","location":"岸上","material":"木制","status":"正常","lat":32.07126305,"lon":118.78303075},{"pointId":"P07","photoName":"picture_2026_05_12_10_53_48_678.jpg","photoTime":"2026-05-12T10:53:48Z","startTime":"2026-05-12 10:53:48","endTime":"2026-05-12 10:54:05","category":"岸上-自然草坡","location":"岸上","material":"自然草坡","status":"正常","lat":32.0708946,"lon":118.783191},{"pointId":"P08","photoName":"picture_2026_05_12_10_58_52_868.jpg","photoTime":"2026-05-12T10:58:52Z","startTime":"2026-05-12 10:58:52","endTime":"2026-05-12 10:59:24","category":"岸上-自然草坡","location":"岸上","material":"自然草坡","status":"正常","lat":32.0689636,"lon":118.7844337},{"pointId":"P09","photoName":"picture_2026_05_12_11_00_52_022.jpg","photoTime":"2026-05-12T11:00:52Z","startTime":"2026-05-12 11:00:52","endTime":"2026-05-12 11:01:33","category":"岸上-自然草坡","location":"岸上","material":"自然草坡","status":"正常","lat":32.0684435,"lon":118.7847899}],"高源浩":[{"pointId":"P01","photoName":"gerImage_1780564172924221952210=171698631.jpg","photoTime":null,"startTime":"2026-06-04 17:09:32","endTime":"2026-06-04 17:11:00","category":"桥上","location":"桥上","material":"","status":"正常","lat":32.065166,"lon":118.792675},{"pointId":"P02","photoName":"gerImage_17805643884191810317458=457205910.jpg","photoTime":null,"startTime":"2026-06-04 17:13:08","endTime":"2026-06-04 17:13:19","category":"路上","location":"路上","material":"","status":"正常","lat":32.066325,"lon":118.792905},{"pointId":"P03","photoName":"gerImage_1780564920925840756753=156350411.jpg","photoTime":null,"startTime":"2026-06-04 17:22:00","endTime":"2026-06-04 17:24:26","category":"岸上-自然草坡","location":"岸上","material":"自然草坡","status":"正常","lat":32.0708895,"lon":118.792169},{"pointId":"P04","photoName":"gerImage_1780565241998172812669=1064637139.jpg","photoTime":null,"startTime":"2026-06-04 17:27:22","endTime":"2026-06-04 17:29:41","category":"桥上","location":"桥上","material":"","status":"正常","lat":32.072007,"lon":118.791259},{"pointId":"P05","photoName":"gerImage_17805660471821839571230=351596751.jpg","photoTime":null,"startTime":"2026-06-04 17:40:47","endTime":"2026-06-04 17:43:45","category":"岸上-硬质铺地","location":"岸上","material":"硬质铺地","status":"正常","lat":32.071212,"lon":118.789706},{"pointId":"P06","photoName":"gerImage_17805669824911696048738=1940692935.jpg","photoTime":null,"startTime":"2026-06-04 17:56:22","endTime":"2026-06-04 17:58:25","category":"岸上-硬质铺地","location":"岸上","material":"硬质铺地","status":"正常","lat":32.0721845,"lon":118.783007},{"pointId":"P07","photoName":"gerImage_17805674339491637491161=1311006622.jpg","photoTime":null,"startTime":"2026-06-04 18:03:53","endTime":"2026-06-04 18:06:16","category":"路上","location":"路上","material":"","status":"正常","lat":32.069697,"lon":118.7833175},{"pointId":"P08","photoName":"gerImage_17805682217872147230618=42308891.jpg","photoTime":null,"startTime":"2026-06-04 18:17:01","endTime":"2026-06-04 18:20:46","category":"岸上-自然草坡","location":"岸上","material":"自然草坡","status":"正常","lat":32.0680485,"lon":118.7860905},{"pointId":"P09","photoName":"gerImage_17805691340511687409370=620239308.jpg","photoTime":null,"startTime":"2026-06-04 18:32:14","endTime":"2026-06-04 18:37:48","category":"岸上-自然草坡","location":"岸上","material":"自然草坡","status":"正常","lat":32.065291,"lon":118.791156}]};
+
+const INITIALS_MAP = {
+  "YIM":"伊曼","FZH":"付梓豪","ZHO":"周照","WHR":"王浩冉","ZZW":"郑智文",
+  "HOY":"洪煜","ZHF":"周海飞","FEL":"冯璐","LXY":"卢潇月","ZQZ":"赵庆卓",
+  "LYX":"刘宇轩","ZYM":"张一鸣","ZHT":"朱涛","LMX":"李明轩","WFY":"汪飞宇",
+  "WYL":"王一霖","XQY":"谢祺旸","CHY":"陈言","GYH":"高源浩"
+};
+
+function buildSceneLookup(sceneList) {
+  // Index by filename (for picture_YYYY_... type) AND by second-level startTime string
+  const byName = {};
+  const byStartSec = {};  // "2026-04-30 17:06:37" -> entry
+  for (const entry of sceneList) {
+    if (entry.photoName) byName[entry.photoName] = entry;
+    if (entry.startTime) {
+      // Key = truncated to seconds (drop sub-second if any)
+      const sec = entry.startTime.slice(0, 19);
+      byStartSec[sec] = entry;
+    }
+  }
+  return { byName, byStartSec };
+}
+
+// Convert epoch ms (UTC) to "YYYY-MM-DD HH:MM:SS" in UTC+8
+function epochMsToBeijingSec(ms) {
+  const d = new Date(ms + 8 * 3600000); // shift to UTC+8
+  return d.toISOString().slice(0, 19).replace('T', ' ');
+}
+
+function matchSceneEntry(photoFilename, photoTimeISO, photoTimeMs, lookup) {
+  // 1) Exact filename match (picture_YYYY_... files)
+  const baseName = photoFilename.split('/').pop();
+  if (lookup.byName[baseName]) return lookup.byName[baseName];
+
+  // 2) Exact second-level timestamp match using ExtendedData epoch ms (most reliable)
+  if (photoTimeMs) {
+    const secStr = epochMsToBeijingSec(photoTimeMs);
+    if (lookup.byStartSec[secStr]) return lookup.byStartSec[secStr];
+    // Try ±1 second tolerance for any clock drift
+    for (let delta = -1; delta <= 1; delta++) {
+      const shifted = epochMsToBeijingSec(photoTimeMs + delta * 1000);
+      if (lookup.byStartSec[shifted]) return lookup.byStartSec[shifted];
+    }
+  }
+
+  // 3) Fallback: ISO time string from <when> tag -> match startTime
+  if (photoTimeISO) {
+    const t = new Date(photoTimeISO);
+    const secStr = epochMsToBeijingSec(t.getTime());
+    if (lookup.byStartSec[secStr]) return lookup.byStartSec[secStr];
+  }
+
+  return null;
+}
+
+const state = {
+  subjects: {},
+  layers: { track: true, points: true, heatmap: false },
+  selectedPoint: null,
+  map: null,
+  mapLayers: {},
+  tileLayer: null,
+  surveyData: {},
+};
+
+
+// Init map
+window.addEventListener('load', () => {
+  setTimeout(() => {
+    document.getElementById('loading').classList.add('done');
+    initMap();
+    // Default to soft watercolor theme + hidden labels for clean scientific output
+    document.documentElement.setAttribute('data-theme', 'watercolor');
+    const lblBtn = document.getElementById('mbt-labels');
+    if (lblBtn) lblBtn.textContent = state.hideLabels ? '显示文字' : '隐藏文字';
+  }, 800);
+});
+
+function initMap() {
+  state.map = L.map('map', {
+    center: [32.06, 118.79],
+    zoom: 14,
+    zoomControl: false
+  });
+  L.control.zoom({ position: 'bottomright' }).addTo(state.map);
+  setTile('osm');
+
+  // Heatmap canvas
+  const canvas = document.getElementById('heatmap-canvas');
+  const mapContainer = document.getElementById('map-container');
+  canvas.width = mapContainer.offsetWidth;
+  canvas.height = mapContainer.offsetHeight;
+  state.map.on('resize', () => {
+    canvas.width = mapContainer.offsetWidth;
+    canvas.height = mapContainer.offsetHeight;
+    if (state.layers.heatmap) drawHeatmap();
+  });
+  state.map.on('moveend zoomend', () => {
+    if (state.layers.heatmap) drawHeatmap();
+  });
+}
+
+// Tile sources — each has a labeled and a clean (no-label) variant where available
+const TILES = {
+  // Light clean basemaps — ideal for academic figures
+  osm:   { labels: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
+           clean:  'https://{s}.basemaps.cartocdn.com/rastertiles/voyager_nolabels/{z}/{x}/{y}{r}.png' },
+  topo:  { labels: 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',
+           clean:  'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png' }, // topo has no nolabel variant
+  dark:  { labels: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+           clean:  'https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png' },
+  light: { labels: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
+           clean:  'https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png' }
+};
+
+state.currentTile = 'osm';
+state.hideLabels = true; // default: clean for scientific output
+
+function setTile(id) {
+  state.currentTile = id;
+  applyTileLayer();
+  ['osm','topo','dark','light'].forEach(k => document.getElementById('mbt-'+k)?.classList.remove('active'));
+  document.getElementById('mbt-'+id)?.classList.add('active');
+}
+
+function applyTileLayer() {
+  if (state.tileLayer) state.map.removeLayer(state.tileLayer);
+  const src = TILES[state.currentTile];
+  const url = (state.hideLabels && src.clean) ? src.clean : src.labels;
+  state.tileLayer = L.tileLayer(url, { maxZoom: 20, attribution: '', crossOrigin: 'anonymous' }).addTo(state.map);
+}
+
+function toggleLabels() {
+  state.hideLabels = !state.hideLabels;
+  const btn = document.getElementById('mbt-labels');
+  if (btn) {
+    btn.classList.toggle('active', !state.hideLabels);
+    btn.textContent = state.hideLabels ? '显示文字' : '隐藏文字';
+  }
+  applyTileLayer();
+}
+
+function setTheme(id) {
+  document.documentElement.setAttribute('data-theme', id);
+  document.querySelectorAll('.theme-swatch').forEach(el => el.classList.remove('active'));
+  document.getElementById('ts-'+id)?.classList.add('active');
+  // Close strip after choosing
+  document.getElementById('theme-strip').classList.remove('open');
+  document.getElementById('mbt-theme').classList.remove('active');
+}
+
+function toggleThemeStrip() {
+  const strip = document.getElementById('theme-strip');
+  const btn = document.getElementById('mbt-theme');
+  const isOpen = strip.classList.contains('open');
+  strip.classList.toggle('open');
+  btn.classList.toggle('active', !isOpen);
+  // Close when clicking outside
+  if (!isOpen) {
+    setTimeout(() => {
+      const close = e => {
+        if (!strip.contains(e.target) && e.target !== btn) {
+          strip.classList.remove('open');
+          btn.classList.remove('active');
+          document.removeEventListener('click', close);
+        }
+      };
+      document.addEventListener('click', close);
+    }, 0);
+  }
+}
+
+// ── Right panel tab switching ──
+function showRightTab(tab) {
+  const detailPane = document.getElementById('right-detail-pane');
+  const hmPane = document.getElementById('right-heatmap-pane');
+  const tabSwitch = document.getElementById('hm-tab-switch');
+  if (tab === 'heatmap') {
+    detailPane.style.display = 'none';
+    hmPane.style.display = 'flex';
+    document.getElementById('right-panel-title').textContent = '热力图设置';
+    document.getElementById('rtab-detail').style.background = 'transparent';
+    document.getElementById('rtab-detail').style.color = 'var(--text2)';
+    document.getElementById('rtab-heatmap').style.background = 'rgba(78,158,255,0.12)';
+    document.getElementById('rtab-heatmap').style.color = 'var(--accent)';
+  } else {
+    detailPane.style.display = 'flex';
+    hmPane.style.display = 'none';
+    document.getElementById('right-panel-title').textContent = '点位详情';
+    document.getElementById('rtab-detail').style.background = 'rgba(78,158,255,0.12)';
+    document.getElementById('rtab-detail').style.color = 'var(--accent)';
+    document.getElementById('rtab-heatmap').style.background = 'transparent';
+    document.getElementById('rtab-heatmap').style.color = 'var(--text2)';
+  }
+}
+
+// ── Heatmap palette definitions ──
+const HM_PALETTES = {
+  // 翡翠园林：透明→嫩绿→翠绿→金→珊瑚红，景观默认
+  jade:    [[0,0,0,0],[200,240,220,30],[140,215,180,110],[64,190,130,180],[238,180,70,225],[225,110,90,255]],
+  // 海洋蓝：清爽水景
+  ocean:   [[0,0,0,0],[225,242,248,30],[150,210,225,110],[60,160,225,185],[60,90,180,230],[30,30,90,255]],
+  // 暖橙日落
+  sunset:  [[0,0,0,0],[255,246,228,30],[255,210,150,120],[255,140,90,200],[220,80,60,240],[150,30,40,255]],
+  // 紫玫学术
+  plum:    [[0,0,0,0],[246,235,248,30],[212,165,220,115],[170,90,185,195],[110,45,150,235],[55,20,90,255]],
+  // 单色灰阶：出版黑白
+  mono:    [[0,0,0,0],[230,230,230,30],[180,180,180,110],[120,120,120,185],[60,60,60,230],[10,10,10,255]],
+  // 青碧国画：薄荷→青→墨青
+  teal:    [[0,0,0,0],[224,247,247,30],[150,225,225,115],[70,180,185,190],[20,120,130,235],[10,65,70,255]],
+  // 地形色：米→绿→棕→红
+  terrain: [[0,0,0,0],[245,245,215,30],[170,215,140,115],[90,165,80,190],[160,110,60,230],[180,70,50,255]],
+  // 樱粉黛：浅樱→玫→黛紫，柔美园林
+  sakura:  [[0,0,0,0],[252,238,242,30],[245,200,215,115],[230,140,170,190],[190,90,140,235],[110,45,95,255]]
+};
+state.hmPalette = 'jade';
+
+function setHmPalette(id) {
+  state.hmPalette = id;
+  document.querySelectorAll('.hm-pal').forEach(el => el.classList.remove('active'));
+  document.getElementById('hpal-'+id)?.classList.add('active');
+  redrawHeatmap();
+}
+
+function redrawHeatmap() {
+  if (state.layers.heatmap) drawHeatmap();
+}
+
+function onHmHidePointsChange() {
+  const hide = document.getElementById('hm-hide-points').checked;
+  // Toggle visibility of point markers
+  const canvas = document.getElementById('heatmap-canvas');
+  if (state.layers.heatmap) {
+    Object.values(state.pointMarkers || {}).forEach(({ marker }) => {
+      const el = marker.getElement();
+      if (el) el.style.opacity = hide ? '0' : '';
+    });
+  }
+}
+
+function onHmHideTrackChange() {
+  const hide = document.getElementById('hm-hide-track').checked;
+  if (state.layers.heatmap) {
+    Object.entries(state.mapLayers).forEach(([key, layer]) => {
+      if (key.startsWith('track-') && layer) {
+        layer.setStyle({ opacity: hide ? 0 : 0.6 });
+      }
+    });
+  }
+}
+
+// File handling
+const dz = document.getElementById('drop-zone');
+dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('drag-over'); });
+dz.addEventListener('dragleave', () => dz.classList.remove('drag-over'));
+dz.addEventListener('drop', e => { e.preventDefault(); dz.classList.remove('drag-over'); handleFiles(e.dataTransfer.files); });
+document.getElementById('file-input').addEventListener('change', e => handleFiles(e.target.files));
+
+async function handleFiles(files) {
+  for (const file of files) {
+    setStatus(`解析 ${file.name}...`);
+    try {
+      await parseKMZFile(file);
+    } catch(err) {
+      showToast(`解析失败: ${file.name}`);
+      console.error(err);
+    }
+  }
+  renderSubjectList();
+  refreshFieldOptions();
+  if (['location','material','category','status'].includes(state.colorBy)) {
+    state._catColorMap = buildCategoryColorMap();
+  }
+  renderAllLayers();
+  updateStats();
+  setStatus('就绪');
+}
+
+async function parseKMZFile(file) {
+  const JSZip = window.JSZip;
+  let kmlText;
+  
+  if (file.name.endsWith('.kmz')) {
+    if (!JSZip) { showToast('需要 JSZip 库'); return; }
+    const zip = await JSZip.loadAsync(file);
+    const kmlFile = Object.keys(zip.files).find(f => f.endsWith('.kml'));
+    if (!kmlFile) { showToast('KMZ 中未找到 KML'); return; }
+    kmlText = await zip.files[kmlFile].async('text');
+  } else {
+    kmlText = await file.text();
+  }
+
+  const parser = new DOMParser();
+  const kml = parser.parseFromString(kmlText, 'text/xml');
+  
+  // Extract subject name from file name or document name
+  const docName = kml.querySelector('Document > name')?.textContent || file.name;
+  const subjectName = file.name.replace(/\.kmz$/i,'').replace(/\.kml$/i,'');
+  
+  // Parse color index
+  const colorIdx = Object.keys(state.subjects).length % COLORS.length;
+  const color = COLORS[colorIdx];
+  
+  // Parse photo placemarks
+  const placemarks = Array.from(kml.querySelectorAll('Placemark'));
+  const photoPoints = [];
+  const trackPoints = [];
+  
+  // Extract date from track
+  let trackDate = '';
+  const firstWhen = kml.querySelector('when');
+  if (firstWhen) {
+    const d = new Date(firstWhen.textContent);
+    const mm = String(d.getMonth()+1).padStart(2,'0');
+    const dd = String(d.getDate()).padStart(2,'0');
+    trackDate = mm + dd;
+  }
+  
+  // ── Auto-detect subject from KMZ content ──────────────────────────────
+  // Priority:
+  //   1. Filename prefix matched against INITIALS_MAP (e.g. "LYX_...")
+  //   2. Photo filename voting: count how many KMZ photo filenames appear in
+  //      each subject's SCENE_DB photoName. Best match wins. (Handles CY/FL/ZZ etc.)
+  //   3. First photo's epoch-ms → exact second match against any subject's startTime
+  //   4. date+hour fallback (last resort, may be ambiguous)
+
+  const initials = deriveInitials(subjectName);
+  let fullName = INITIALS_MAP[initials] || null;
+
+  if (!fullName) {
+    // Collect all photo filenames from this KMZ
+    const kmzPhotoNames = new Set();
+    for (const pm of placemarks) {
+      const desc = pm.querySelector('description');
+      if (!desc || !desc.textContent.includes('src="files/')) continue;
+      const m = desc.textContent.match(/src="files\/([^"]+)"/);
+      if (m) kmzPhotoNames.add(m[1]);
+    }
+
+    // Strategy 2: vote by photoName matches across all subjects
+    if (kmzPhotoNames.size > 0) {
+      let bestName = null, bestCount = 0;
+      for (const [name, points] of Object.entries(SCENE_DB)) {
+        let count = 0;
+        for (const pt of points) {
+          if (pt.photoName && kmzPhotoNames.has(pt.photoName)) count++;
+        }
+        if (count > bestCount) { bestCount = count; bestName = name; }
+      }
+      if (bestCount > 0) {
+        fullName = bestName;
+      }
+    }
+
+    // Strategy 3: exact second-level timestamp match against startTime
+    if (!fullName) {
+      let firstPhotoMs = null;
+      for (const pm of placemarks) {
+        const desc = pm.querySelector('description');
+        if (!desc || !desc.textContent.includes('src="files/')) continue;
+        for (const v of pm.querySelectorAll('ExtendedData > Data > value')) {
+          const t = (v.textContent || '').trim();
+          if (/^\d{13}$/.test(t)) { firstPhotoMs = parseInt(t); break; }
+        }
+        if (firstPhotoMs) break;
+      }
+      if (firstPhotoMs) {
+        // ms → Beijing second string
+        const beijingSecStr = epochMsToBeijingSec(firstPhotoMs);
+        for (const [name, points] of Object.entries(SCENE_DB)) {
+          for (const pt of points) {
+            if (!pt.startTime) continue;
+            // Allow ±2s tolerance for GPS clock drift
+            for (let delta = -2; delta <= 2; delta++) {
+              if (epochMsToBeijingSec(firstPhotoMs + delta * 1000) === pt.startTime.slice(0, 19)) {
+                fullName = name;
+                break;
+              }
+            }
+            if (fullName) break;
+          }
+          if (fullName) break;
+        }
+      }
+    }
+
+    // Strategy 4: date+hour (last resort, ambiguous but better than nothing)
+    if (!fullName) {
+      let firstPhotoMs = null;
+      for (const pm of placemarks) {
+        const desc = pm.querySelector('description');
+        if (!desc || !desc.textContent.includes('src="files/')) continue;
+        for (const v of pm.querySelectorAll('ExtendedData > Data > value')) {
+          const t = (v.textContent || '').trim();
+          if (/^\d{13}$/.test(t)) { firstPhotoMs = parseInt(t); break; }
+        }
+        if (firstPhotoMs) break;
+      }
+      if (firstPhotoMs) {
+        const beijingMs = firstPhotoMs + 8 * 3600000;
+        const dateHour = new Date(beijingMs).toISOString().slice(0, 13).replace('T', ' ');
+        for (const [name, points] of Object.entries(SCENE_DB)) {
+          if (!points.length || !points[0].startTime) continue;
+          if (points[0].startTime.slice(0, 13) === dateHour) {
+            fullName = name;
+            break;
+          }
+        }
+      }
+    }
+  }
+
+  const sceneList = fullName ? (SCENE_DB[fullName] || null) : null;
+  const lookup = sceneList ? buildSceneLookup(sceneList) : null;
+
+  if (!fullName) {
+    showToast(`⚠ 无法自动识别被试（${file.name}），按序导入所有点位`);
+  } else if (!INITIALS_MAP[initials]) {
+    showToast(`✓ 自动识别：${fullName}（来自 ${file.name}）`);
+  }
+
+  let photoCount = 0;
+
+  placemarks.forEach(pm => {
+    const coordEl = pm.querySelector('coordinates');
+    if (!coordEl) return;
+    const [lon, lat, alt] = coordEl.textContent.trim().split(',').map(Number);
+    const when = pm.querySelector('when')?.textContent || '';
+    const img = pm.querySelector('description')?.textContent?.match(/src="(files\/[^"]+)"/)?.[1] || '';
+    const speed = pm.querySelector('Data[name="Speed"] value')?.textContent || '';
+    const acc = pm.querySelector('Data[name="Accuracy"] value')?.textContent || '';
+
+    // Extract 13-digit epoch ms from ExtendedData (two-steps app gerImage files)
+    let photoTimeMs = null;
+    const extData = pm.querySelectorAll('ExtendedData > Data > value');
+    for (const v of extData) {
+      const t = (v.textContent || '').trim();
+      if (/^\d{13}$/.test(t)) { photoTimeMs = parseInt(t); break; }
+    }
+
+    if (!img) return;
+
+    if (lookup) {
+      const matched = matchSceneEntry(img, when, photoTimeMs, lookup);
+      if (!matched) return;  // Not the start-time photo → discard
+
+      // Build full point ID: MMDD_缩写_PXX (e.g. 0430_ZHO_P01)
+      const mmdd = (matched.startTime || '').slice(5,10).replace('-',''); // "04-30" -> "0430"
+      const abbr = Object.entries(INITIALS_MAP).find(([k,v]) => v === fullName)?.[0] || initials;
+      const fullId = `${mmdd}_${abbr}_${matched.pointId}`;
+
+      if (photoPoints.find(p => p.id === fullId)) return; // Already added
+
+      photoPoints.push({
+        id: fullId,
+        baseId: matched.pointId,
+        lat, lon, alt,
+        time: when,
+        speed: speed ? parseFloat(speed).toFixed(2) + ' m/s' : '—',
+        accuracy: acc ? parseFloat(acc).toFixed(2) + ' m' : '—',
+        photo: img,
+        mergedCount: 1,
+        mergedFrom: [img],
+        visible: true,
+        category: matched.category || '',
+        location: matched.location || '',
+        material: matched.material || '',
+        status: matched.status || '',
+        survey: {}
+      });
+    } else {
+      // Fallback: sequential numbering
+      photoCount++;
+      const pid = String(photoCount).padStart(2,'0');
+      const date = trackDate || extractDateFromWhen(when);
+      photoPoints.push({
+        id: `${date}_${initials}_P${pid}`,
+        lat, lon, alt,
+        time: when,
+        speed: speed ? parseFloat(speed).toFixed(2) + ' m/s' : '—',
+        accuracy: acc ? parseFloat(acc).toFixed(2) + ' m' : '—',
+        photo: img,
+        mergedCount: 1,
+        mergedFrom: [img],
+        visible: true,
+        category: '', location: '', material: '', status: '',
+        survey: {}
+      });
+    }
+  });
+  
+  // Parse gx:Track
+  const gxCoords = Array.from(kml.getElementsByTagNameNS('http://www.google.com/kml/ext/2.2','coord'));
+  const whens = Array.from(kml.querySelectorAll('Track when, MultiTrack when'));
+  
+  gxCoords.forEach((c, i) => {
+    const [lon, lat, alt] = c.textContent.trim().split(' ').map(Number);
+    trackPoints.push({ lat, lon, alt, time: whens[i]?.textContent || '' });
+  });
+  
+  // Use fullName as the canonical key; fall back to filename
+  const subjectKey = fullName || subjectName;
+  const displayInitials = fullName ? (initials.length <= 3 && /^[A-Z]+$/.test(initials) && INITIALS_MAP[initials] ? initials : Object.entries(INITIALS_MAP).find(([k,v])=>v===fullName)?.[0] || initials) : initials;
+
+  if (state.subjects[subjectKey]) {
+    const existing = state.subjects[subjectKey];
+    existing.rawPoints = [...(existing.rawPoints || existing.points), ...photoPoints];
+    existing.points = [...existing.points, ...photoPoints];
+    existing.track = [...existing.track, ...trackPoints];
+  } else {
+    state.subjects[subjectKey] = {
+      name: subjectKey,
+      initials: displayInitials,
+      color,
+      visible: true,
+      trackVisible: true,
+      rawPoints: [...photoPoints],
+      points: photoPoints,
+      track: trackPoints,
+      docName
+    };
+  }
+  
+  const hint = lookup ? `已匹配 ${photoPoints.length} 个点位 → ${fullName}` : `已载入 ${photoPoints.length} 个点（未识别被试）`;
+  document.getElementById('merge-status').textContent = hint;
+  showToast(`✓ 已导入 ${fullName || subjectName}：${photoPoints.length} 个点位`);
+  markUnsaved();
+}
+
+function deriveInitials(name) {
+  // First 3 characters of the filename are the subject's initials (e.g. "LYX_2026-05-12_...")
+  return name.slice(0, 3).toUpperCase();
+}
+
+function extractDateFromWhen(when) {
+  if (!when) return '0000';
+  const d = new Date(when);
+  return String(d.getMonth()+1).padStart(2,'0') + String(d.getDate()).padStart(2,'0');
+}
+
+function renderSubjectList() {
+  const list = document.getElementById('subject-list');
+  const subjects = Object.values(state.subjects);
+  document.getElementById('subject-count-badge').textContent = subjects.length;
+  
+  if (subjects.length === 0) {
+    list.innerHTML = '<div style="text-align:center;padding:24px 16px;font-family:var(--font-mono);font-size:10px;color:var(--text3);letter-spacing:0.06em;">暂无被试数据</div>';
+    return;
+  }
+  
+  list.innerHTML = subjects.map(sub => `
+    <div class="subject-item" id="si-${sub.name}">
+      <div class="subject-hdr" onclick="toggleSubjectExpand('${sub.name}')">
+        <button class="subject-toggle-btn" onclick="event.stopPropagation();toggleSubjectVisibility('${sub.name}')" title="显示/隐藏此被试全部数据" id="vis-${sub.name}" style="width:20px;height:20px;display:flex;align-items:center;justify-content:center;color:${sub.visible !== false ? sub.color : 'var(--text3)'};margin-right:2px;flex-shrink:0;">
+          ${sub.visible !== false
+            ? `<svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"><ellipse cx="7" cy="7" rx="6" ry="3.5"/><circle cx="7" cy="7" r="1.5" fill="currentColor" stroke="none"/></svg>`
+            : `<svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"><ellipse cx="7" cy="7" rx="6" ry="3.5" stroke-dasharray="2 1.5"/><line x1="2" y1="2" x2="12" y2="12"/></svg>`
+          }
+        </button>
+        <div class="subject-dot" style="background:${sub.color}"></div>
+        <div class="subject-name">${sub.name}</div>
+        <div class="subject-count">${sub.points.length}pt</div>
+        <button class="subject-toggle-btn" onclick="event.stopPropagation();confirmDelete('${sub.name}')" title="删除被试" style="color:var(--danger);opacity:0.5;font-size:12px;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.5">✕</button>
+        <button class="subject-toggle-btn" id="expand-${sub.name}">▼</button>
+      </div>
+      <div class="subject-points" id="sp-${sub.name}">
+        ${sub.points.map(pt => `
+          <div class="point-row" id="pr-${pt.id}" onclick="selectPoint('${sub.name}','${pt.id}')">
+            <button class="pt-vis-btn" id="pvb-${pt.id}"
+              onclick="event.stopPropagation();togglePointVisibility('${sub.name}','${pt.id}')"
+              title="显示/隐藏此点位"
+              style="width:10px;height:10px;border-radius:50%;border:1.5px solid ${sub.color};background:${pt.visible !== false ? sub.color : 'transparent'};cursor:pointer;flex-shrink:0;padding:0;transition:background 0.15s;">
+            </button>
+            <div class="point-id" style="color:${pt.visible !== false ? 'var(--text2)' : 'var(--text3)'}" id="pid-label-${pt.id}">${pt.id}</div>
+            <div class="point-time">${formatTimeShort(pt.time)}</div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `).join('');
+}
+
+function formatTimeShort(iso) {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+}
+
+function toggleSubjectExpand(name) {
+  const el = document.getElementById(`sp-${name}`);
+  const btn = document.getElementById(`expand-${name}`);
+  el.classList.toggle('open');
+  btn.textContent = el.classList.contains('open') ? '▲' : '▼';
+}
+
+function toggleSubjectVisibility(name) {
+  const sub = state.subjects[name];
+  if (!sub) return;
+  sub.visible = sub.visible === false ? true : false;
+  const show = sub.visible !== false;
+
+  // Update eye icon button
+  const btn = document.getElementById(`vis-${name}`);
+  if (btn) {
+    btn.style.color = show ? sub.color : 'var(--text3)';
+    btn.innerHTML = show
+      ? `<svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"><ellipse cx="7" cy="7" rx="6" ry="3.5"/><circle cx="7" cy="7" r="1.5" fill="currentColor" stroke="none"/></svg>`
+      : `<svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"><ellipse cx="7" cy="7" rx="6" ry="3.5" stroke-dasharray="2 1.5"/><line x1="2" y1="2" x2="12" y2="12"/></svg>`;
+  }
+
+  // Toggle track polyline opacity in-place
+  const polyline = state.mapLayers[`track-${name}`];
+  if (polyline) polyline.setStyle({ opacity: show ? 0.6 : 0 });
+
+  // Toggle all point markers for this subject in-place
+  sub.points.forEach(pt => {
+    const entry = state.pointMarkers?.[pt.id];
+    if (!entry) return;
+    const ptShow = show && pt.visible !== false;
+    const col = getPointColor(sub, pt);
+    const newIcon = L.divIcon({
+      html: `<div style="width:12px;height:12px;border-radius:50%;background:${ptShow ? col : 'transparent'};border:2px solid ${col};cursor:pointer;box-shadow:${ptShow ? `0 0 6px ${col}44` : 'none'};opacity:${ptShow ? 1 : 0};transition:all 0.15s;"></div>`,
+      iconSize: [12,12], iconAnchor: [6,6], className: ''
+    });
+    entry.marker.setIcon(newIcon);
+  });
+
+  if (state.layers.heatmap) drawHeatmap();
+  markUnsaved();
+}
+
+function togglePointVisibility(subName, pointId) {
+  const sub = state.subjects[subName];
+  if (!sub) return;
+  const pt = sub.points.find(p => p.id === pointId);
+  if (!pt) return;
+  pt.visible = pt.visible === false ? true : false;
+  const show = pt.visible !== false;
+
+  // Update list button
+  const btn = document.getElementById(`pvb-${pointId}`);
+  if (btn) {
+    btn.style.background = show ? sub.color : 'transparent';
+  }
+  // Update label dimming
+  const lbl = document.getElementById(`pid-label-${pointId}`);
+  if (lbl) lbl.style.color = show ? 'var(--text2)' : 'var(--text3)';
+
+  // Update marker in-place without full re-render
+  const entry = state.pointMarkers?.[pointId];
+  if (entry) {
+    const col = getPointColor(sub, pt);
+    const newIcon = L.divIcon({
+      html: `<div style="width:12px;height:12px;border-radius:50%;background:${show ? col : 'transparent'};border:2px solid ${col};cursor:pointer;box-shadow:${show ? `0 0 6px ${col}44` : 'none'};opacity:${show ? 1 : 0.35};transition:all 0.15s;"></div>`,
+      iconSize: [12,12], iconAnchor: [6,6], className: ''
+    });
+    entry.marker.setIcon(newIcon);
+  }
+
+  if (state.layers.heatmap) drawHeatmap();
+  markUnsaved();
+}
+
+function renderAllLayers() {
+  Object.values(state.mapLayers).forEach(group => {
+    if (group && state.map.hasLayer(group)) state.map.removeLayer(group);
+  });
+  state.mapLayers = {};
+  state.pointMarkers = state.pointMarkers || {};
+  Object.values(state.pointMarkers).forEach(m => { if (state.map.hasLayer(m.marker)) state.map.removeLayer(m.marker); });
+  state.pointMarkers = {};
+
+  const subjects = Object.values(state.subjects);
+  const hmOn = state.layers.heatmap;
+  const hidePoints = hmOn && (document.getElementById('hm-hide-points')?.checked ?? true);
+  const hideTrack  = hmOn && (document.getElementById('hm-hide-track')?.checked ?? true);
+
+  subjects.forEach(sub => {
+    const subShow = sub.visible !== false;
+
+    // Track layer
+    if (state.layers.track && sub.track.length > 1) {
+      const latLngs = sub.track.map(p => [p.lat, p.lon]);
+      const polyline = L.polyline(latLngs, {
+        color: sub.color,
+        weight: 2,
+        opacity: (!subShow || hideTrack) ? 0 : 0.6
+      }).addTo(state.map);
+      state.mapLayers[`track-${sub.name}`] = polyline;
+    }
+
+    // Per-point markers
+    if (state.layers.points) {
+      sub.points.forEach(pt => {
+        const ptShow = subShow && pt.visible !== false && !hidePoints;
+        const col = getPointColor(sub, pt);
+        const icon = L.divIcon({
+          html: `<div style="width:12px;height:12px;border-radius:50%;background:${ptShow ? col : 'transparent'};border:2px solid ${col};cursor:pointer;box-shadow:${ptShow ? `0 0 6px ${col}44` : 'none'};opacity:${ptShow ? 1 : 0};transition:all 0.15s;"></div>`,
+          iconSize: [12,12], iconAnchor: [6,6], className: ''
+        });
+        const marker = L.marker([pt.lat, pt.lon], { icon })
+          .on('click', () => { if (subShow && pt.visible !== false) selectPoint(sub.name, pt.id); })
+          .addTo(state.map);
+        state.pointMarkers[pt.id] = { marker, sub, pt };
+      });
+    }
+  });
+
+  if (hmOn) drawHeatmap();
+  updateLegend();
+}
+
+// ── Color-by-element system ──
+state.colorBy = 'subject';     // subject | location | material | category | status | field
+state.colorField = null;       // the survey field name when colorBy === 'field'
+
+// Categorical palette for element-based coloring (distinct, print-friendly)
+const CAT_COLORS = ['#4e9eff','#52c596','#f4a261','#e052a0','#a78bfa','#fbbf24','#34d399','#f87171','#60a5fa','#c084fc','#fb923c','#2dd4bf','#facc15','#fb7185'];
+
+// Build a stable category->color map for the current colorBy dimension
+function buildCategoryColorMap() {
+  const map = {};
+  if (['location','material','category','status'].includes(state.colorBy)) {
+    const values = new Set();
+    Object.values(state.subjects).forEach(sub =>
+      sub.points.forEach(pt => { const v = pt[state.colorBy]; if (v) values.add(v); })
+    );
+    [...values].sort().forEach((v, i) => { map[v] = CAT_COLORS[i % CAT_COLORS.length]; });
+  }
+  return map;
+}
+
+// Get numeric field range for gradient coloring
+function getFieldRange(field) {
+  let min = Infinity, max = -Infinity;
+  Object.values(state.subjects).forEach(sub =>
+    sub.points.forEach(pt => {
+      const v = parseFloat(pt.survey?.[field]);
+      if (!isNaN(v)) { if (v < min) min = v; if (v > max) max = v; }
+    })
+  );
+  return (min === Infinity) ? null : { min, max };
+}
+
+// Viridis-like gradient for numeric field coloring (perceptually uniform, academic)
+function fieldGradientColor(t) {
+  const stops = [[68,1,84],[59,82,139],[33,145,140],[94,201,98],[253,231,37]];
+  t = Math.max(0, Math.min(1, t));
+  const n = stops.length - 1;
+  const i = Math.min(Math.floor(t*n), n-1);
+  const f = t*n - i;
+  const a = stops[i], b = stops[i+1];
+  return `rgb(${Math.round(a[0]+(b[0]-a[0])*f)},${Math.round(a[1]+(b[1]-a[1])*f)},${Math.round(a[2]+(b[2]-a[2])*f)})`;
+}
+
+// Determine a point's display color based on current colorBy mode
+function getPointColor(sub, pt) {
+  switch (state.colorBy) {
+    case 'subject':
+      return sub.color;
+    case 'location':
+    case 'material':
+    case 'category':
+    case 'status': {
+      const v = pt[state.colorBy];
+      return state._catColorMap?.[v] || '#888c9c';
+    }
+    case 'field': {
+      if (!state.colorField || !state._fieldRange) return '#888c9c';
+      const v = parseFloat(pt.survey?.[state.colorField]);
+      if (isNaN(v)) return '#3a3f52';
+      const { min, max } = state._fieldRange;
+      const t = max > min ? (v - min) / (max - min) : 0.5;
+      return fieldGradientColor(t);
+    }
+    default:
+      return sub.color;
+  }
+}
+
+function setColorBy(mode) {
+  state.colorBy = mode;
+  document.querySelectorAll('.colorby-btn').forEach(b =>
+    b.classList.toggle('active', b.dataset.mode === mode));
+
+  const fieldSel = document.getElementById('field-select');
+  if (mode === 'field') {
+    fieldSel.style.display = 'block';
+    state.colorField = fieldSel.value || null;
+    state._fieldRange = state.colorField ? getFieldRange(state.colorField) : null;
+  } else {
+    fieldSel.style.display = 'none';
+    state._catColorMap = buildCategoryColorMap();
+  }
+  renderAllLayers();
+}
+
+function onFieldSelectChange() {
+  const fieldSel = document.getElementById('field-select');
+  state.colorField = fieldSel.value || null;
+  state._fieldRange = state.colorField ? getFieldRange(state.colorField) : null;
+  renderAllLayers();
+}
+
+// Populate the numeric-field dropdown from imported survey data
+function refreshFieldOptions() {
+  const fields = new Set();
+  Object.values(state.subjects).forEach(sub =>
+    sub.points.forEach(pt => {
+      if (pt.survey) Object.entries(pt.survey).forEach(([k,v]) => {
+        if (!isNaN(parseFloat(v))) fields.add(k);
+      });
+    })
+  );
+  const sel = document.getElementById('field-select');
+  const fieldBtn = document.getElementById('colorby-field-btn');
+  if (fields.size > 0) {
+    fieldBtn.style.display = '';
+    sel.innerHTML = [...fields].map(f => `<option value="${f}">${f}</option>`).join('');
+    if (!state.colorField) state.colorField = [...fields][0];
+  } else {
+    fieldBtn.style.display = 'none';
+  }
+}
+
+// ── Legend ──
+function updateLegend() {
+  const legend = document.getElementById('map-legend');
+  const title = document.getElementById('legend-title');
+  const body = document.getElementById('legend-body');
+  if (!legend) return;
+
+  const labels = { subject:'被试', location:'位置分类', material:'水岸材质', category:'场景分类', status:'状态', field:state.colorField || '数值' };
+
+  if (state.colorBy === 'subject') {
+    const subs = Object.values(state.subjects);
+    if (subs.length === 0) { legend.classList.remove('visible'); return; }
+    title.textContent = '图例 · 被试';
+    body.innerHTML = subs.map(s =>
+      `<div class="legend-item"><span class="legend-dot" style="background:${s.color}"></span>${INITIALS_MAP[s.initials]||s.name}</div>`
+    ).join('');
+    legend.classList.add('visible');
+  } else if (['location','material','category','status'].includes(state.colorBy)) {
+    const map = state._catColorMap || buildCategoryColorMap();
+    const keys = Object.keys(map);
+    if (keys.length === 0) { legend.classList.remove('visible'); return; }
+    title.textContent = '图例 · ' + labels[state.colorBy];
+    body.innerHTML = keys.map(k =>
+      `<div class="legend-item"><span class="legend-dot" style="background:${map[k]}"></span>${k}</div>`
+    ).join('');
+    legend.classList.add('visible');
+  } else if (state.colorBy === 'field' && state._fieldRange) {
+    const { min, max } = state._fieldRange;
+    title.textContent = '图例 · ' + labels.field;
+    const grad = `linear-gradient(to right, ${fieldGradientColor(0)}, ${fieldGradientColor(0.25)}, ${fieldGradientColor(0.5)}, ${fieldGradientColor(0.75)}, ${fieldGradientColor(1)})`;
+    body.innerHTML =
+      `<div class="legend-gradient-bar" style="background:${grad}"></div>
+       <div class="legend-gradient-labels"><span>${min.toFixed(1)}</span><span>${max.toFixed(1)}</span></div>`;
+    legend.classList.add('visible');
+  } else {
+    legend.classList.remove('visible');
+  }
+}
+
+function toggleLayer(type) {
+  state.layers[type] = !state.layers[type];
+  const btn = document.getElementById(`btn-show-${type}`);
+  btn.classList.toggle('active', state.layers[type]);
+  renderAllLayers();
+}
+
+function toggleHeatmap() {
+  state.layers.heatmap = !state.layers.heatmap;
+  const btn = document.getElementById('btn-heatmap');
+  btn.classList.toggle('active', state.layers.heatmap);
+  const canvas = document.getElementById('heatmap-canvas');
+  const tabSwitch = document.getElementById('hm-tab-switch');
+
+  if (state.layers.heatmap) {
+    canvas.classList.add('visible');
+    canvas.style.opacity = (document.getElementById('hm-opacity')?.value || 80) / 100;
+    drawHeatmap();
+    // Show tab switcher and auto-switch to heatmap pane
+    tabSwitch.style.display = 'flex';
+    showRightTab('heatmap');
+    // Apply hide-points / hide-track
+    onHmHidePointsChange();
+    onHmHideTrackChange();
+  } else {
+    canvas.classList.remove('visible');
+    tabSwitch.style.display = 'none';
+    showRightTab('detail');
+    // Restore points and track visibility
+    Object.values(state.pointMarkers || {}).forEach(({ marker }) => {
+      const el = marker.getElement();
+      if (el) el.style.opacity = '';
+    });
+    Object.entries(state.mapLayers).forEach(([key, layer]) => {
+      if (key.startsWith('track-') && layer) layer.setStyle({ opacity: 0.6 });
+    });
+  }
+}
+
+function drawHeatmap() {
+  const canvas = document.getElementById('heatmap-canvas');
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  const visibleOnly = document.getElementById('hm-visible-only')?.checked ?? true;
+
+  const allPoints = [];
+  Object.values(state.subjects).filter(s => !visibleOnly || s.visible !== false).forEach(sub => {
+    sub.points.filter(p => !visibleOnly || p.visible !== false).forEach(pt => allPoints.push([pt.lat, pt.lon]));
+  });
+  if (allPoints.length === 0) return;
+
+  const radius    = parseInt(document.getElementById('hm-radius')?.value || 40);
+  const intensity = parseFloat(document.getElementById('hm-intensity')?.value || 1.0);
+  const blurPx    = parseInt(document.getElementById('hm-blur')?.value || 10);
+  const gamma     = parseFloat(document.getElementById('hm-gamma')?.value || 0.6);
+  const palette   = HM_PALETTES[state.hmPalette || 'jade'];
+
+  const W = canvas.width, H = canvas.height;
+
+  // ── Stage 1: paint greyscale "intensity" field using soft radial gradients ──
+  // This produces a naturally smooth density surface (the professional approach).
+  const shade = document.createElement('canvas');
+  shade.width = W; shade.height = H;
+  const sctx = shade.getContext('2d');
+
+  // Per-point alpha so overlapping points accumulate density
+  const pointAlpha = Math.min(0.55, Math.max(0.12, 0.4 * intensity));
+  sctx.globalCompositeOperation = 'lighter'; // additive accumulation
+
+  allPoints.forEach(([lat, lon]) => {
+    const px = state.map.latLngToContainerPoint([lat, lon]);
+    const grad = sctx.createRadialGradient(px.x, px.y, 0, px.x, px.y, radius);
+    grad.addColorStop(0,   `rgba(0,0,0,${pointAlpha})`);
+    grad.addColorStop(0.5, `rgba(0,0,0,${pointAlpha * 0.5})`);
+    grad.addColorStop(1,   'rgba(0,0,0,0)');
+    sctx.fillStyle = grad;
+    sctx.beginPath();
+    sctx.arc(px.x, px.y, radius, 0, Math.PI * 2);
+    sctx.fill();
+  });
+
+  // Optional extra smoothing
+  let intensitySrc = shade;
+  if (blurPx > 0) {
+    const blurred = document.createElement('canvas');
+    blurred.width = W; blurred.height = H;
+    const bctx = blurred.getContext('2d');
+    bctx.filter = `blur(${blurPx}px)`;
+    bctx.drawImage(shade, 0, 0);
+    bctx.filter = 'none';
+    intensitySrc = blurred;
+  }
+
+  // ── Stage 2: map the greyscale alpha → palette colour via a 256-entry LUT ──
+  const lut = buildPaletteLUT(palette);  // [256][4]
+  const sdata = intensitySrc.getContext('2d').getImageData(0, 0, W, H).data;
+  const out = ctx.createImageData(W, H);
+
+  for (let i = 0; i < W * H; i++) {
+    const alpha = sdata[i*4 + 3]; // 0..255 accumulated density
+    if (alpha === 0) continue;
+    let t = alpha / 255;
+    t = Math.pow(Math.min(t, 1), gamma); // gamma for contrast control
+    const idx = Math.min(255, Math.round(t * 255));
+    const c = lut[idx];
+    out.data[i*4]   = c[0];
+    out.data[i*4+1] = c[1];
+    out.data[i*4+2] = c[2];
+    out.data[i*4+3] = c[3];
+  }
+  ctx.putImageData(out, 0, 0);
+}
+
+// Build a 256-step color lookup table from palette stops
+function buildPaletteLUT(palette) {
+  const lut = new Array(256);
+  const n = palette.length - 1;
+  for (let i = 0; i < 256; i++) {
+    const t = i / 255;
+    const seg = Math.min(Math.floor(t * n), n - 1);
+    const f = t * n - seg;
+    const a = palette[seg], b = palette[seg + 1];
+    lut[i] = [
+      Math.round(a[0] + (b[0]-a[0])*f),
+      Math.round(a[1] + (b[1]-a[1])*f),
+      Math.round(a[2] + (b[2]-a[2])*f),
+      Math.round(a[3] + (b[3]-a[3])*f)
+    ];
+  }
+  return lut;
+}
+
+function selectPoint(subjectName, pointId) {
+  const sub = state.subjects[subjectName];
+  if (!sub) return;
+  const pt = sub.points.find(p => p.id === pointId);
+  if (!pt) return;
+  
+  state.selectedPoint = { subjectName, pointId };
+  
+  document.getElementById('info-empty').style.display = 'none';
+  const detail = document.getElementById('point-detail');
+  detail.classList.add('visible');
+  
+  document.getElementById('detail-id').textContent = pt.id;
+  document.getElementById('detail-id').style.color = sub.color;
+  const fullName = INITIALS_MAP[sub.initials] || sub.name;
+  document.getElementById('detail-subject').textContent = `${fullName}（${sub.initials}）`;
+  document.getElementById('d-lon').textContent = pt.lon.toFixed(7);
+  document.getElementById('d-lat').textContent = pt.lat.toFixed(7);
+  document.getElementById('d-alt').textContent = pt.alt ? pt.alt.toFixed(2) + ' m' : '—';
+  document.getElementById('d-time').textContent = pt.time ? new Date(pt.time).toLocaleString('zh-CN') : '—';
+  document.getElementById('d-speed').textContent = pt.speed || '—';
+  document.getElementById('d-acc').textContent = pt.accuracy || '—';
+  document.getElementById('d-photo').textContent = pt.photo ? pt.photo.split('/').pop() : '无';
+  document.getElementById('d-category').textContent = pt.category || '—';
+  document.getElementById('d-material').textContent = pt.material || '—';
+  const statusEl = document.getElementById('d-pstatus');
+  statusEl.textContent = pt.status || '—';
+  statusEl.style.color = pt.status === '正常' ? 'var(--success)' : pt.status ? 'var(--accent3)' : 'var(--text3)';
+  const mergedRow = document.getElementById('d-merged-row');
+  const mergedEl = document.getElementById('d-merged');
+  if (pt.mergedCount > 1) {
+    mergedRow.style.display = '';
+    mergedEl.textContent = `${pt.mergedCount} 张照片 → 取最早时间代表`;
+    mergedEl.style.color = 'var(--accent3)';
+  } else {
+    mergedRow.style.display = '';
+    mergedEl.textContent = `1 张（未合并）`;
+    mergedEl.style.color = 'var(--text3)';
+  }
+  document.getElementById('d-survey').textContent = Object.keys(pt.survey||{}).length ? JSON.stringify(pt.survey) : '—';
+  document.getElementById('survey-input').value = Object.keys(pt.survey||{}).length ? JSON.stringify(pt.survey, null, 2) : '';
+  
+  state.map.panTo([pt.lat, pt.lon]);
+}
+
+function saveSurveyData() {
+  if (!state.selectedPoint) return;
+  const { subjectName, pointId } = state.selectedPoint;
+  const sub = state.subjects[subjectName];
+  const pt = sub.points.find(p => p.id === pointId);
+  if (!pt) return;
+  
+  try {
+    const val = JSON.parse(document.getElementById('survey-input').value || '{}');
+    pt.survey = val;
+    document.getElementById('d-survey').textContent = JSON.stringify(val);
+    showToast('✓ 问卷数据已保存');
+    markUnsaved();
+  } catch(e) {
+    showToast('JSON 格式错误');
+  }
+}
+
+function buildDataStructure() {
+  const result = { subjects: {} };
+  Object.entries(state.subjects).forEach(([name, sub]) => {
+    result.subjects[name] = {
+      color: sub.color,
+      initials: sub.initials,
+      total_points: sub.points.length,
+      track_points: sub.track.length,
+      points: {}
+    };
+    sub.points.forEach(pt => {
+      result.subjects[name].points[pt.id] = {
+        lat: pt.lat,
+        lon: pt.lon,
+        alt: pt.alt,
+        time: pt.time,
+        speed: pt.speed,
+        accuracy: pt.accuracy,
+        photo: pt.photo,
+        survey: pt.survey || {}
+      };
+    });
+  });
+  return result;
+}
+
+function toggleExport() {
+  const panel = document.getElementById('export-panel');
+  panel.classList.toggle('open');
+  if (panel.classList.contains('open')) {
+    const data = buildDataStructure();
+    const preview = JSON.stringify(data, null, 2);
+    document.getElementById('export-preview').textContent = preview.slice(0, 2000) + (preview.length > 2000 ? '\n...(截断)' : '');
+  }
+}
+
+function exportJSON() {
+  const data = buildDataStructure();
+  download(JSON.stringify(data, null, 2), 'geofield_data.json', 'application/json');
+  showToast('✓ JSON 已下载');
+}
+
+function exportCSV() {
+  const rows = ['id,subject,lat,lon,alt,time,speed,accuracy,photo'];
+  Object.entries(state.subjects).forEach(([name, sub]) => {
+    sub.points.forEach(pt => {
+      const surveyVals = Object.entries(pt.survey||{}).map(([k,v]) => `${k}:${v}`).join('|');
+      rows.push([
+        `"${pt.id}"`, `"${name}"`,
+        pt.lat, pt.lon, pt.alt || '',
+        `"${pt.time}"`, `"${pt.speed||''}"`, `"${pt.accuracy||''}"`,
+        `"${pt.photo||''}"`, `"${surveyVals}"`
+      ].join(','));
+    });
+  });
+  download(rows.join('\n'), 'geofield_gwr.csv', 'text/csv');
+  showToast('✓ CSV 已下载');
+}
+
+function exportGeoJSON() {
+  const features = [];
+  Object.entries(state.subjects).forEach(([name, sub]) => {
+    sub.points.forEach(pt => {
+      features.push({
+        type: 'Feature',
+        geometry: { type: 'Point', coordinates: [pt.lon, pt.lat, pt.alt || 0] },
+        properties: {
+          id: pt.id,
+          subject: name,
+          time: pt.time,
+          speed: pt.speed,
+          accuracy: pt.accuracy,
+          photo: pt.photo,
+          ...pt.survey
+        }
+      });
+    });
+  });
+  const gj = { type: 'FeatureCollection', features };
+  download(JSON.stringify(gj, null, 2), 'geofield_data.geojson', 'application/json');
+  showToast('✓ GeoJSON 已下载');
+}
+
+function download(content, filename, mime) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([content], { type: mime }));
+  a.download = filename;
+  a.click();
+}
+
+// ── Import data table (CSV / XLSX) and align to points by ID ──
+async function importDataTable(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const statusEl = document.getElementById('table-import-status');
+
+  if (typeof XLSX === 'undefined') {
+    showToast('表格解析库未加载，请稍候重试');
+    return;
+  }
+
+  try {
+    const buf = await file.arrayBuffer();
+    const wb = XLSX.read(buf, { type: 'array' });
+    const sheet = wb.Sheets[wb.SheetNames[0]];
+    const rows = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+    if (!rows.length) { showToast('表格为空'); return; }
+
+    // Identify the ID column: header containing 'id'/'点位'/'pointid', or the column
+    // whose values look like our point IDs (PXX or MMDD_ABBR_PXX)
+    const headers = Object.keys(rows[0]);
+    const idHeader = findIdColumn(headers, rows);
+    if (!idHeader) {
+      showToast('未找到点位ID列（需含 PXX 或 MMDD_缩写_PXX 格式）');
+      statusEl.textContent = '✗ 未找到可匹配的ID列';
+      return;
+    }
+
+    // Build a lookup from every point's possible IDs -> point object
+    const idLookup = {};
+    Object.values(state.subjects).forEach(sub => {
+      sub.points.forEach(pt => {
+        idLookup[normalizeId(pt.id)] = pt;          // full: 0430_ZHO_P01
+        if (pt.baseId) {
+          // also index by "ABBR_PXX" and bare "PXX" within this subject scope is ambiguous,
+          // so only index bare PXX if unique globally (handled below)
+        }
+      });
+    });
+
+    // Also build a bare-PXX index per subject for fallback (needs subject column or unique)
+    let matched = 0, unmatched = 0;
+    const dataCols = headers.filter(h => h !== idHeader);
+
+    rows.forEach(row => {
+      const rawId = String(row[idHeader]).trim();
+      if (!rawId) return;
+      const pt = resolvePoint(rawId, idLookup);
+      if (!pt) { unmatched++; return; }
+      pt.survey = pt.survey || {};
+      dataCols.forEach(col => {
+        const val = row[col];
+        if (val !== '' && val != null) pt.survey[col] = val;
+      });
+      matched++;
+    });
+
+    refreshFieldOptions();
+    if (state.colorBy === 'field') { state._fieldRange = state.colorField ? getFieldRange(state.colorField) : null; }
+    renderAllLayers();
+    markUnsaved();
+
+    statusEl.innerHTML = `✓ 匹配 <span style="color:var(--accent2)">${matched}</span> 点位，未匹配 ${unmatched}，新增字段 ${dataCols.length} 个`;
+    showToast(`✓ 表格对表完成：${matched} 个点位已挂载数据`);
+  } catch (err) {
+    console.error(err);
+    showToast('表格解析失败：' + err.message);
+    statusEl.textContent = '✗ 解析失败';
+  } finally {
+    input.value = '';
+  }
+}
+
+function normalizeId(id) {
+  return String(id).trim().toUpperCase();
+}
+
+// Find the most likely ID column
+function findIdColumn(headers, rows) {
+  // 1) header keyword
+  const kw = headers.find(h => /id|点位|编号|pointid|point_id/i.test(h));
+  if (kw) return kw;
+  // 2) value-pattern: column whose values mostly match PXX or MMDD_ABBR_PXX
+  const idPat = /^(\d{4}_[A-Z]{2,4}_)?P\d{1,3}$/i;
+  for (const h of headers) {
+    const hits = rows.filter(r => idPat.test(String(r[h]).trim())).length;
+    if (hits >= rows.length * 0.6) return h;
+  }
+  return null;
+}
+
+// Resolve a raw table ID to a point, trying full ID then bare PXX (if globally unique)
+function resolvePoint(rawId, idLookup) {
+  const norm = normalizeId(rawId);
+  if (idLookup[norm]) return idLookup[norm];
+
+  // Try matching by suffix PXX against full IDs (e.g. table has "P01", point is "0430_ZHO_P01")
+  const m = norm.match(/P\d{1,3}$/);
+  if (m) {
+    const suffix = m[0];
+    const candidates = [];
+    Object.values(state.subjects).forEach(sub =>
+      sub.points.forEach(pt => {
+        if (normalizeId(pt.baseId || pt.id).endsWith(suffix) || normalizeId(pt.id).endsWith('_' + suffix) || normalizeId(pt.id) === suffix)
+          candidates.push(pt);
+      })
+    );
+    if (candidates.length === 1) return candidates[0];
+  }
+  return null;
+}
+
+// ── Export map as PNG image ──
+async function exportMapImage(scale) {
+  if (typeof html2canvas === 'undefined') {
+    showToast('截图库未加载，请稍候重试');
+    return;
+  }
+  showToast('正在生成图片…');
+  const mapContainer = document.getElementById('map-container');
+
+  try {
+    // Ensure all tiles are loaded; small delay
+    await new Promise(r => setTimeout(r, 300));
+
+    const canvas = await html2canvas(mapContainer, {
+      useCORS: true,
+      allowTaint: false,
+      scale: scale || 2,
+      backgroundColor: null,
+      logging: false,
+      ignoreElements: (el) => el.classList?.contains('map-export-fab')
+    });
+
+    canvas.toBlob(blob => {
+      const ts = new Date().toISOString().slice(0,16).replace('T','_').replace(':','-');
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `geofield_map_${ts}.png`;
+      a.click();
+      showToast('✓ 地图图片已导出');
+    }, 'image/png');
+  } catch (err) {
+    console.error(err);
+    showToast('图片导出失败（底图瓦片可能受跨域限制）：' + err.message);
+  }
+}
+
+function quickExportPNG() {
+  exportMapImage(2);
+}
+
+
+function updateStats() {
+  const subjects = Object.values(state.subjects);
+  const totalPts = subjects.reduce((a,s) => a + s.points.length, 0);
+  const totalTrack = subjects.reduce((a,s) => a + s.track.length, 0);
+  document.getElementById('st-subjects').textContent = subjects.length;
+  document.getElementById('st-points').textContent = totalPts;
+  document.getElementById('st-track').textContent = totalTrack;
+}
+
+function switchView(view) {
+  const mapC = document.getElementById('map-container');
+  const tableC = document.getElementById('table-view');
+  const panelR = document.querySelector('.panel-right');
+  
+  if (view === 'map') {
+    mapC.style.display = '';
+    tableC.style.display = 'none';
+    panelR.style.display = '';
+    document.getElementById('btn-map').classList.add('active');
+    document.getElementById('btn-table').classList.remove('active');
+  } else {
+    mapC.style.display = 'none';
+    tableC.style.display = '';
+    panelR.style.display = 'none';
+    document.getElementById('btn-map').classList.remove('active');
+    document.getElementById('btn-table').classList.add('active');
+    renderTable();
+  }
+}
+
+function renderTable() {
+  const container = document.getElementById('table-container');
+  const subjects = Object.values(state.subjects);
+  if (subjects.length === 0) {
+    container.innerHTML = '<div style="font-family:var(--font-mono);font-size:12px;color:var(--text3);text-align:center;padding:40px">暂无数据</div>';
+    return;
+  }
+  
+  let html = `
+    <div style="font-family:var(--font-mono);font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:16px;">
+      共 ${subjects.length} 名被试 · ${subjects.reduce((a,s)=>a+s.points.length,0)} 个点位
+    </div>
+    <table style="width:100%;border-collapse:collapse;font-family:var(--font-mono);font-size:11px;">
+      <thead>
+        <tr style="border-bottom:1px solid var(--border2);">
+          <th style="text-align:left;padding:8px 12px;color:var(--text3);font-weight:400;font-size:10px;letter-spacing:0.08em;text-transform:uppercase;">点位 ID</th>
+          <th style="text-align:left;padding:8px 12px;color:var(--text3);font-weight:400;font-size:10px;letter-spacing:0.08em;text-transform:uppercase;">被试</th>
+          <th style="text-align:right;padding:8px 12px;color:var(--text3);font-weight:400;font-size:10px;letter-spacing:0.08em;text-transform:uppercase;">纬度</th>
+          <th style="text-align:right;padding:8px 12px;color:var(--text3);font-weight:400;font-size:10px;letter-spacing:0.08em;text-transform:uppercase;">经度</th>
+          <th style="text-align:right;padding:8px 12px;color:var(--text3);font-weight:400;font-size:10px;letter-spacing:0.08em;text-transform:uppercase;">海拔</th>
+          <th style="text-align:left;padding:8px 12px;color:var(--text3);font-weight:400;font-size:10px;letter-spacing:0.08em;text-transform:uppercase;">时间</th>
+          <th style="text-align:left;padding:8px 12px;color:var(--text3);font-weight:400;font-size:10px;letter-spacing:0.08em;text-transform:uppercase;">问卷</th>
+        </tr>
+      </thead>
+      <tbody>
+  `;
+  
+  subjects.forEach(sub => {
+    sub.points.forEach((pt, i) => {
+      html += `
+        <tr style="border-bottom:1px solid var(--border);cursor:pointer;transition:background 0.1s;" 
+            onmouseover="this.style.background='rgba(78,158,255,0.05)'"
+            onmouseout="this.style.background=''"
+            onclick="switchView('map');selectPoint('${sub.name}','${pt.id}')">
+          <td style="padding:7px 12px;color:${sub.color};">${pt.id}</td>
+          <td style="padding:7px 12px;color:var(--text2);">
+            <span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:${sub.color};margin-right:6px;vertical-align:middle;"></span>${sub.name}
+          </td>
+          <td style="padding:7px 12px;text-align:right;color:var(--text);">${pt.lat.toFixed(6)}</td>
+          <td style="padding:7px 12px;text-align:right;color:var(--text);">${pt.lon.toFixed(6)}</td>
+          <td style="padding:7px 12px;text-align:right;color:var(--text2);">${pt.alt ? pt.alt.toFixed(1) : '—'}</td>
+          <td style="padding:7px 12px;color:var(--text2);">${pt.time ? new Date(pt.time).toLocaleString('zh-CN',{hour12:false}) : '—'}</td>
+          <td style="padding:7px 12px;color:${Object.keys(pt.survey||{}).length ? 'var(--success)' : 'var(--text3)'}">
+            ${Object.keys(pt.survey||{}).length ? '✓ 已录入' : '—'}
+          </td>
+        </tr>
+      `;
+    });
+  });
+  
+  html += '</tbody></table>';
+  container.innerHTML = html;
+}
+
+function setStatus(msg) {
+  document.getElementById('st-status').textContent = msg;
+}
+
+let _confirmCallback = null;
+function confirmDelete(subjectName) {
+  const sub = state.subjects[subjectName];
+  if (!sub) return;
+  document.getElementById('confirm-title').textContent = '删除被试';
+  document.getElementById('confirm-msg').textContent =
+    `确认删除「${subjectName}」？\n共 ${sub.rawPoints?.length || sub.points.length} 个原始点，${sub.points.length} 个合并点，以及所有问卷数据。此操作不可撤销。`;
+  document.getElementById('confirm-ok-btn').textContent = '删除';
+  _confirmCallback = () => deleteSubject(subjectName);
+  document.getElementById('confirm-mask').classList.add('open');
+}
+function closeConfirm() {
+  document.getElementById('confirm-mask').classList.remove('open');
+  _confirmCallback = null;
+}
+function confirmAction() {
+  if (_confirmCallback) _confirmCallback();
+  closeConfirm();
+}
+
+function deleteSubject(name) {
+  // Clear map layers for this subject
+  ['track','points'].forEach(type => {
+    const key = `${type}-${name}`;
+    if (state.mapLayers[key]) {
+      if (state.map.hasLayer(state.mapLayers[key])) state.map.removeLayer(state.mapLayers[key]);
+      delete state.mapLayers[key];
+    }
+  });
+  // If selected point belongs to deleted subject, clear detail panel
+  if (state.selectedPoint?.subjectName === name) {
+    state.selectedPoint = null;
+    document.getElementById('info-empty').style.display = '';
+    document.getElementById('point-detail').classList.remove('visible');
+  }
+  delete state.subjects[name];
+  renderSubjectList();
+  updateStats();
+  if (state.layers.heatmap) drawHeatmap();
+  markUnsaved();
+  showToast(`已删除被试：${name}`);
+}
+
+/* ── Session save / load ── */
+const SESSION_VERSION = 1;
+
+function markUnsaved() {
+  const dot = document.getElementById('save-dot');
+  const lbl = document.getElementById('save-label');
+  dot.className = 'save-dot unsaved';
+  lbl.textContent = '未保存';
+}
+
+function markSaved(filename) {
+  const dot = document.getElementById('save-dot');
+  const lbl = document.getElementById('save-label');
+  dot.className = 'save-dot saved';
+  const now = new Date();
+  lbl.textContent = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')} 已保存`;
+  setTimeout(() => { if (dot.className.includes('saved')) dot.className = 'save-dot'; }, 4000);
+}
+
+function saveSession() {
+  const dot = document.getElementById('save-dot');
+  dot.className = 'save-dot saving';
+
+  const session = {
+    _version: SESSION_VERSION,
+    _savedAt: new Date().toISOString(),
+    subjects: {}
+  };
+
+  Object.entries(state.subjects).forEach(([name, sub]) => {
+    session.subjects[name] = {
+      name: sub.name,
+      initials: sub.initials,
+      color: sub.color,
+      visible: sub.visible,
+      docName: sub.docName,
+      rawPoints: sub.rawPoints || sub.points,
+      points: sub.points,
+      track: sub.track
+    };
+  });
+
+  const blob = new Blob([JSON.stringify(session, null, 2)], { type: 'application/json' });
+  const ts = new Date().toISOString().slice(0,16).replace('T','_').replace(':','-');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `geofield_session_${ts}.geofield`;
+  a.click();
+  setTimeout(() => markSaved(), 400);
+  showToast('✓ 存档已下载');
+}
+
+function loadSession(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const session = JSON.parse(e.target.result);
+      if (!session._version) throw new Error('格式不符');
+
+      // Clear current state
+      Object.values(state.mapLayers).forEach(l => { if (state.map.hasLayer(l)) state.map.removeLayer(l); });
+      state.mapLayers = {};
+      state.subjects = {};
+      state.selectedPoint = null;
+      document.getElementById('info-empty').style.display = '';
+      document.getElementById('point-detail').classList.remove('visible');
+
+      // Restore subjects
+      Object.entries(session.subjects).forEach(([name, sub]) => {
+        state.subjects[name] = {
+          name: sub.name,
+          initials: sub.initials,
+          color: sub.color,
+          visible: sub.visible ?? true,
+          trackVisible: sub.trackVisible ?? true,
+          docName: sub.docName || name,
+          rawPoints: sub.rawPoints || sub.points,
+          points: sub.points,
+          track: sub.track || []
+        };
+      });
+
+      const totalPts = Object.values(state.subjects).reduce((a,s) => a+s.points.length, 0);
+      document.getElementById('merge-status').textContent = `存档已还原，共 ${totalPts} 个点位`;
+
+      renderSubjectList();
+      refreshFieldOptions();
+      if (['location','material','category','status'].includes(state.colorBy)) {
+        state._catColorMap = buildCategoryColorMap();
+      }
+      renderAllLayers();
+      updateStats();
+
+      // Fit map to data
+      const allLatLng = [];
+      Object.values(state.subjects).forEach(sub => {
+        sub.points.forEach(p => allLatLng.push([p.lat, p.lon]));
+      });
+      if (allLatLng.length) state.map.fitBounds(L.latLngBounds(allLatLng), { padding: [40,40] });
+
+      markSaved();
+      showToast(`✓ 已载入存档：${Object.keys(session.subjects).length} 名被试`);
+    } catch(err) {
+      showToast(`读档失败：${err.message}`);
+      console.error(err);
+    }
+    input.value = '';
+  };
+  reader.readAsText(file);
+}
+
+/* Watch state changes to mark unsaved */
+const _origSaveSurvey = window.saveSurveyData;
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+</script>
+
+<!-- JSZip for KMZ parsing -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<!-- html2canvas for map screenshot export -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<!-- SheetJS for table import -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</body>
+</html>

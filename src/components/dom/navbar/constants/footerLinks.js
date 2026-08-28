@@ -1,19 +1,9 @@
 const footerLinks = [
+  { title: 'Email', href: 'mailto:zai_nanfang@163.com' },
   {
-    title: 'Github',
-    href: 'https://github.com/Giats2498',
+    title: 'Wardrobe Wise',
+    href: 'https://wardrobe-wise-fit.zainanfang999.chatgpt.site',
   },
-  {
-    title: 'LinkedIn',
-    href: 'https://www.linkedin.com/in/giats',
-  },
-  {
-    title: 'Instagram',
-    href: 'https://www.instagram.com/giats_/',
-  },
-  {
-    title: 'Twitter',
-    href: 'https://twitter.com/Giats_',
-  },
+  { title: 'Giats Credit', href: 'https://giats.me' },
 ];
 export default footerLinks;

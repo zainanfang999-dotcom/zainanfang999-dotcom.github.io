@@ -15,15 +15,42 @@ const containt = [
       <div className="p-l">software.</div>,
     ],
     options: [
-      { title: 'Web Development', desc: 'Create responsive and dynamic websites that deliver a seamless user experience' },
-      { title: 'Landing Page Development', desc: 'Design and develop high-converting landing pages tailored to your marketing goals' },
-      { title: '3D Website Creation', desc: 'Transform your digital presence with immersive 3D websites that captivate and engage users' },
-      { title: 'Desktop App Development', desc: 'Build cross-platform desktop applications for Windows, Mac and Linux' },
-      { title: 'Mobile App Development', desc: 'Build cross-platform mobile applications for iOS and Android' },
-      { title: 'E-commerce Solutions', desc: 'Develop custom e-commerce platforms tailored to your unique business needs' },
-      { title: 'CMS Development', desc: 'Implement flexible and easy-to-use content management systems for efficient website management' },
-      { title: 'Cloud Solutions', desc: 'Harness the power of the cloud to optimize performance, scalability, and reliability' },
-      { title: 'QA & Testing', desc: 'Secure the quality and reliability of your software through comprehensive testing and quality assurance' },
+      {
+        title: 'Web Development',
+        desc: 'Create responsive and dynamic websites that deliver a seamless user experience',
+      },
+      {
+        title: 'Landing Page Development',
+        desc: 'Design and develop high-converting landing pages tailored to your marketing goals',
+      },
+      {
+        title: '3D Website Creation',
+        desc: 'Transform your digital presence with immersive 3D websites that captivate and engage users',
+      },
+      {
+        title: 'Desktop App Development',
+        desc: 'Build cross-platform desktop applications for Windows, Mac and Linux',
+      },
+      {
+        title: 'Mobile App Development',
+        desc: 'Build cross-platform mobile applications for iOS and Android',
+      },
+      {
+        title: 'E-commerce Solutions',
+        desc: 'Develop custom e-commerce platforms tailored to your unique business needs',
+      },
+      {
+        title: 'CMS Development',
+        desc: 'Implement flexible and easy-to-use content management systems for efficient website management',
+      },
+      {
+        title: 'Cloud Solutions',
+        desc: 'Harness the power of the cloud to optimize performance, scalability, and reliability',
+      },
+      {
+        title: 'QA & Testing',
+        desc: 'Secure the quality and reliability of your software through comprehensive testing and quality assurance',
+      },
     ],
   },
   {
@@ -41,14 +68,38 @@ const containt = [
       <div className="p-l">sure your site performs its best.</div>,
     ],
     options: [
-      { title: 'Keyword Research', desc: 'Identify high-traffic, relevant keywords to target for optimal search performance' },
-      { title: 'On-Page SEO', desc: 'Optimize your website content and structure to improve search engine indexing and ranking' },
-      { title: 'Off-Page SEO', desc: 'Enhance your website’s authority through strategic link building and social media engagement' },
-      { title: 'Technical SEO', desc: 'Ensure your website meets all technical requirements for search engine crawlers and indexing' },
-      { title: 'Local SEO', desc: 'Boost your local online presence to attract more customers from your geographic area' },
-      { title: 'Content Optimization', desc: 'Improve the quality and relevance of your website content to align with SEO best practices' },
-      { title: 'Competitor Analysis', desc: 'Analyze your competitors’ SEO strategies to identify opportunities and threats' },
-      { title: 'Analytics & Reporting', desc: 'Monitor your SEO performance with detailed analytics and comprehensive reports' },
+      {
+        title: 'Keyword Research',
+        desc: 'Identify high-traffic, relevant keywords to target for optimal search performance',
+      },
+      {
+        title: 'On-Page SEO',
+        desc: 'Optimize your website content and structure to improve search engine indexing and ranking',
+      },
+      {
+        title: 'Off-Page SEO',
+        desc: 'Enhance your website’s authority through strategic link building and social media engagement',
+      },
+      {
+        title: 'Technical SEO',
+        desc: 'Ensure your website meets all technical requirements for search engine crawlers and indexing',
+      },
+      {
+        title: 'Local SEO',
+        desc: 'Boost your local online presence to attract more customers from your geographic area',
+      },
+      {
+        title: 'Content Optimization',
+        desc: 'Improve the quality and relevance of your website content to align with SEO best practices',
+      },
+      {
+        title: 'Competitor Analysis',
+        desc: 'Analyze your competitors’ SEO strategies to identify opportunities and threats',
+      },
+      {
+        title: 'Analytics & Reporting',
+        desc: 'Monitor your SEO performance with detailed analytics and comprehensive reports',
+      },
     ],
   },
   {
@@ -70,12 +121,30 @@ const containt = [
       <div className="p-l">enjoyable user experience.</div>,
     ],
     options: [
-      { title: 'User Research', desc: 'Understand your users’ needs, behaviors, and pain points to design intuitive interfaces' },
-      { title: 'Wireframing & Prototyping', desc: 'Create sketches and interactive prototypes to visualize and test your application’s structure' },
-      { title: 'Visual Design', desc: 'Design the look and feel of your application, including colors, typography, and graphical elements' },
-      { title: 'Interaction Design', desc: 'Craft interactive elements like buttons and forms to enhance user engagement and ease of use' },
-      { title: 'Usability Testing', desc: 'Test your designs with real users to gather feedback and affirm ease of use' },
-      { title: 'Responsive Design', desc: 'Ensure your design works well on various devices and screen sizes for a consistent experience' },
+      {
+        title: 'User Research',
+        desc: 'Understand your users’ needs, behaviors, and pain points to design intuitive interfaces',
+      },
+      {
+        title: 'Wireframing & Prototyping',
+        desc: 'Create sketches and interactive prototypes to visualize and test your application’s structure',
+      },
+      {
+        title: 'Visual Design',
+        desc: 'Design the look and feel of your application, including colors, typography, and graphical elements',
+      },
+      {
+        title: 'Interaction Design',
+        desc: 'Craft interactive elements like buttons and forms to enhance user engagement and ease of use',
+      },
+      {
+        title: 'Usability Testing',
+        desc: 'Test your designs with real users to gather feedback and affirm ease of use',
+      },
+      {
+        title: 'Responsive Design',
+        desc: 'Ensure your design works well on various devices and screen sizes for a consistent experience',
+      },
     ],
   },
 ];

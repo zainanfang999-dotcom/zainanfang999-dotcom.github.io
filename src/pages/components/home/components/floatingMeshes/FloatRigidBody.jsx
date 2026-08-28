@@ -7,11 +7,10 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 
 import { InstancedRigidBodies } from '@react-three/rapier';
 import { MeshTransmissionMaterial } from '@react-three/drei';
-import { easing } from 'maath';
 import { useFrame } from '@react-three/fiber';
 import useIsMobile from '@src/hooks/useIsMobile';
 
-const accents = ['#8A2BE2', '#FF1493', '#FFFF00', '#DC143C'];
+const accents = ['#0f9f86', '#202020', '#55d4ba', '#8b8b86'];
 
 const r = THREE.MathUtils.randFloatSpread;
 
@@ -52,7 +51,7 @@ export default function FloatRigidBody({ totalCount, transparentCount }) {
       if (i < normalCount) {
         normalInstances.push(instance);
         if ((!isMobile && i < 7) || (isMobile && i < 4)) {
-          colors.set(color.set('#1A1A1A').toArray(), i * 3);
+          colors.set(color.set('#202020').toArray(), i * 3);
         } else {
           colors.set(color.set(accents[0]).toArray(), i * 3);
         }
@@ -61,7 +60,15 @@ export default function FloatRigidBody({ totalCount, transparentCount }) {
       }
     }
 
-    return { factors, xFactors, yFactors, zFactors, normalInstances, transparentInstances, colors };
+    return {
+      factors,
+      xFactors,
+      yFactors,
+      zFactors,
+      normalInstances,
+      transparentInstances,
+      colors,
+    };
   }, [isMobile, normalCount, totalCount]);
 
   useEffect(() => {
@@ -99,7 +106,7 @@ export default function FloatRigidBody({ totalCount, transparentCount }) {
       const newColor = new THREE.Color(accents[currentAccentIndex]);
       for (let i = !isMobile ? 7 : 4; i < normalCount; i++) {
         const currentColor = new THREE.Color().fromArray(colors.slice(i * 3, (i + 1) * 3));
-        easing.dampC(currentColor, newColor, 0.1, state.delta);
+        currentColor.lerp(newColor, Math.min(1, state.delta * 6));
         colors.set(currentColor.toArray(), i * 3);
       }
 

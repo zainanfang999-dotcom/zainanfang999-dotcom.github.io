@@ -1,124 +1,116 @@
 /* eslint-disable react/jsx-props-no-spreading */
-import { useEffect, useMemo, useRef } from 'react';
-
+import ButtonLink from '@src/components/animationComponents/buttonLink/Index';
 import CustomHead from '@src/components/dom/CustomHead';
-import NextProject from '@src/pages/projects/components/nextProject/NextProject';
-import ProjectDetails from '@src/pages/projects/components/projectDetails/ProjectDetails';
-import ProjectImages from '@src/pages/projects/components/projectsImages/ProjectImages';
-import { ScrollTrigger } from 'gsap/dist/ScrollTrigger';
+import Image from 'next/image';
+import Link from 'next/link';
 import clsx from 'clsx';
-import { gsap } from 'gsap';
 import projects from '@src/constants/projects';
 import styles from '@src/pages/projects/project.module.scss';
-import useIsMobile from '@src/hooks/useIsMobile';
-import { useIsomorphicLayoutEffect } from '@src/hooks/useIsomorphicLayoutEffect';
-import { useShallow } from 'zustand/react/shallow';
-import { useStore } from '@src/store';
-import { useWindowSize } from '@darkroom.engineering/hamo';
 
 function Page({ id }) {
-  const isMobile = useIsMobile();
-  const rightContainerRef = useRef();
-  const leftContainerRef = useRef();
-  const [isLoading, setFluidColor] = useStore(useShallow((state) => [state.isLoading, state.setFluidColor]));
-  const windowSize = useWindowSize();
+  const projectIndex = projects.findIndex((item) => item.id === id);
+  const project = projects[projectIndex];
+  const nextProject = projects[(projectIndex + 1) % projects.length];
+  const hasEmbeddedDemo = project.id === 'geofield' || project.id === 'scene-survey';
 
-  const projectIndex = useMemo(() => projects.findIndex((project) => project.id === id), [id]);
-  const currentProject = useMemo(() => projects[projectIndex], [projectIndex]);
-
-  const updateCSSVariables = (project) => {
-    gsap.set('html', {
-      '--black': project.primary,
-      '--white': project.secondary,
-      '--accentColor': project.accentColor,
-      '--fillColor': project.fillColor,
-      '--menuColor': project.menuColor,
-      '--menuFontColor': project.menuFontColor,
-    });
+  const seo = {
+    title: `${project.title}｜赵庆卓 AI 产品经理作品集`,
+    description: project.summary,
+    keywords: [project.title, project.titleEn, '赵庆卓', 'AI 产品经理', ...project.tags],
   };
-
-  useIsomorphicLayoutEffect(() => {
-    const ctx = gsap.context(() => {
-      if (!isLoading && !isMobile) {
-        ScrollTrigger.create({
-          id: 'project',
-          trigger: rightContainerRef.current,
-          start: 'top top',
-          end: 'bottom bottom',
-          pin: leftContainerRef.current,
-          scrub: true,
-          scroller: document?.querySelector('main'),
-          invalidateOnRefresh: true,
-          pinSpacing: false,
-        });
-      }
-    });
-
-    return () => {
-      ctx.kill();
-      ScrollTrigger.getById('project')?.kill();
-    };
-  }, [isMobile, isLoading, windowSize.width]);
-
-  useEffect(() => {
-    if (currentProject) {
-      updateCSSVariables(currentProject);
-      setFluidColor(currentProject.fluidColor);
-    }
-    return () => {
-      updateCSSVariables({
-        primary: '#28282b',
-        secondary: '#f0f4f1',
-        accentColor: '#f9f9f9',
-        fillColor: '#f2ffbd',
-        menuColor: '#28282b',
-        menuFontColor: '#f0f4f1',
-      });
-      setFluidColor('#d7d7d4');
-    };
-  }, [currentProject]);
-
-  const seo = useMemo(
-    () => ({
-      title: `Giats - ${currentProject.title} Project`,
-      description: `Check out my work on the ${currentProject.title} project, collaborating with ${currentProject.company}, where I enhanced frontend development with responsive design and optimized user interactions.`,
-      keywords: [
-        `${currentProject.title} project`,
-        `${currentProject.title} development`,
-        `${currentProject.company} collaboration`,
-        `Evangelos Giatsidis ${currentProject.title}`,
-        `Giats ${currentProject.title}`,
-        `Frontend development ${currentProject.title}`,
-        `Responsive design ${currentProject.title}`,
-        `User interactions ${currentProject.title}`,
-      ],
-    }),
-    [currentProject],
-  );
 
   return (
     <>
       <CustomHead {...seo} />
-      <section className={clsx(styles.root, 'layout-grid-inner')}>
-        <div ref={leftContainerRef} className={styles.leftContainer}>
-          <ProjectDetails project={currentProject} />
-        </div>
-        <div ref={rightContainerRef} className={styles.rightContainer}>
-          <ProjectImages project={currentProject} />
-        </div>
-      </section>
-      <NextProject nextProject={projectIndex === projects.length - 1 ? projects[0] : projects[projectIndex + 1]} />
+      <article className={styles.root}>
+        <section className={clsx(styles.hero, 'layout-grid-inner')}>
+          <Link className={styles.back} href="/#projects" scroll={false}>
+            ← 返回项目总览
+          </Link>
+          <div className={styles.heroMeta}>
+            <span>{project.index}</span>
+            <span>{project.type}</span>
+            <span>{project.date}</span>
+          </div>
+          <h1>{project.title}</h1>
+          <p className={styles.summary}>{project.summary}</p>
+          <div className={styles.tags}>
+            {project.tags.map((tag) => (
+              <span key={tag}>{tag}</span>
+            ))}
+          </div>
+          <strong className={styles.outcome}>{project.outcome}</strong>
+          <div className={styles.heroAction}>
+            <ButtonLink target href={project.liveLink} label="体验项目" />
+          </div>
+        </section>
+
+        <section className={clsx(styles.visual, 'layout-block-inner')}>
+          <div className={styles.visualInner}>
+            <Image src={project.cover} fill sizes="94vw" alt={`${project.title}真实项目界面`} />
+            <a href={project.liveLink} target="_blank" rel="noreferrer">
+              进入可交互版本 <b>↗</b>
+            </a>
+          </div>
+        </section>
+
+        <section className={clsx(styles.caseBody, 'layout-grid-inner')}>
+          <div className={styles.caseLabel}>CASE STUDY / {project.titleEn}</div>
+          <div className={styles.problem}>
+            <span>问题</span>
+            <h2>{project.problem}</h2>
+          </div>
+          <div className={styles.role}>
+            <span>我的工作</span>
+            <p>{project.role}</p>
+          </div>
+          <div className={styles.approach}>
+            <span>关键产品判断</span>
+            {project.approach.map((item, index) => (
+              <article key={item}>
+                <b>0{index + 1}</b>
+                <p>{item}</p>
+              </article>
+            ))}
+          </div>
+          <div className={styles.result}>
+            <span>结果</span>
+            <h3>{project.result}</h3>
+            {project.liveLink && (
+              <div>
+                <ButtonLink target href={project.liveLink} label={hasEmbeddedDemo ? '打开可交互原型' : '体验线上产品'} />
+              </div>
+            )}
+          </div>
+        </section>
+
+        {hasEmbeddedDemo && (
+          <section className={clsx(styles.demoSection, 'layout-block-inner')}>
+            <div className={styles.demoHead}>
+              <span>INTERACTIVE PROTOTYPE</span>
+              <p>这是项目文件夹中的真实可交互版本，可在窗口内体验，也可以单独打开。</p>
+            </div>
+            <iframe title={`${project.title} 可交互原型`} src={project.liveLink} loading="lazy" />
+          </section>
+        )}
+
+        <Link href={nextProject.link} scroll={false} className={styles.nextProject}>
+          <span>NEXT CASE / {nextProject.index}</span>
+          <h2>{nextProject.title}</h2>
+          <b>↗</b>
+        </Link>
+      </article>
     </>
   );
 }
 
 export async function getStaticPaths() {
-  const paths = projects.map((project) => ({ params: { id: project.id } }));
-  return { paths, fallback: false };
+  return {
+    paths: projects.map((project) => ({ params: { id: project.id } })),
+    fallback: false,
+  };
 }
-
-export async function getStaticProps(context) {
-  const { params } = context;
+export async function getStaticProps({ params }) {
   return { props: { id: params.id } };
 }
 

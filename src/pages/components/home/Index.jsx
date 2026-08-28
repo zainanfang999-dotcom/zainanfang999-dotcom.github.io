@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useRef, useState } from 'react';
 
-import FloatingMeshes from '@src/pages/components/home/components/floatingMeshes/Index';
+import Image from 'next/image';
 import InfiniteText from '@src/components/animationComponents/infiniteText/Index';
 import clsx from 'clsx';
 import { gsap } from 'gsap';
@@ -53,10 +53,17 @@ const performMoves = (rectangles, gridWidth, gridHeight) => {
         moveRect(rect, direction, gridWidth, gridHeight);
         const newPosition = { ...rect };
 
-        const { x, y } = { x: parseFloat(newPosition.x), y: parseFloat(newPosition.y) };
-        if (x > -0.5 && x < 90 && y > -0.5 && y < 90 && !isPositionOccupied(rectangles, newPosition)) {
+        const { x, y } = {
+          x: parseFloat(newPosition.x),
+          y: parseFloat(newPosition.y),
+        };
+        if (x > -0.5 && x <= 100 - gridWidth + 0.5 && y > -0.5 && y <= 100 - gridHeight + 0.5 && !isPositionOccupied(rectangles, newPosition)) {
           validMove = true;
-          validMoves.push({ index: newPosition.index, x: newPosition.x, y: newPosition.y });
+          validMoves.push({
+            index: newPosition.index,
+            x: newPosition.x,
+            y: newPosition.y,
+          });
           Object.assign(rectangles[newPosition.index], newPosition);
         } else {
           Object.assign(rect, originalPosition);
@@ -85,32 +92,22 @@ function Home() {
     () =>
       !isMobile
         ? [
-            { index: 0, x: '0.00%', y: '50.00%' },
-            { index: 1, x: '16.67%', y: '0.00%' },
-            { index: 2, x: '33.34%', y: '0.00%' },
-            { index: 3, x: '50.01%', y: '0.00%' },
-            { index: 4, x: '66.68%', y: '50.00%' },
-            { index: 5, x: '83.35%', y: '50.00%' },
-            { index: 6, x: '33.34%', y: '50.00%' },
+            { index: 0, x: '0.00%', y: '0.00%' },
+            { index: 1, x: '33.33%', y: '0.00%' },
+            { index: 2, x: '33.33%', y: '50.00%' },
+            { index: 3, x: '66.66%', y: '50.00%' },
           ]
         : [
             { index: 0, x: '0.00%', y: '0.00%' },
-            { index: 1, x: '20.00%', y: '0.00%' },
-            { index: 2, x: '60.00%', y: '0.00%' },
-            { index: 3, x: '20.00%', y: '20.00%' },
-            { index: 4, x: '80.00%', y: '20.00%' },
-            { index: 5, x: '20.00%', y: '40.00%' },
-            { index: 6, x: '60.00%', y: '40.00%' },
-            { index: 7, x: '40.00%', y: '60.00%' },
-            { index: 8, x: '80.00%', y: '60.00%' },
-            { index: 9, x: '20.00%', y: '80.00%' },
-            { index: 10, x: '60.00%', y: '80.00%' },
+            { index: 1, x: '50.00%', y: '0.00%' },
+            { index: 2, x: '0.00%', y: '66.66%' },
+            { index: 3, x: '50.00%', y: '66.66%' },
           ],
     [isMobile],
   );
 
-  const gridWidth = useMemo(() => (!isMobile ? 16.67 : 20.0), [isMobile]);
-  const gridHeight = useMemo(() => (!isMobile ? 50.0 : 20.0), [isMobile]);
+  const gridWidth = useMemo(() => (!isMobile ? 33.33 : 50.0), [isMobile]);
+  const gridHeight = useMemo(() => (!isMobile ? 50.0 : 33.33), [isMobile]);
 
   const animateRectangles = useCallback(
     (movements) => {
@@ -225,18 +222,14 @@ function Home() {
     <section ref={rootRef} className={clsx(styles.root)}>
       <div className={clsx(styles.topContainer, 'layout-grid-inner')}>
         <div className={styles.leftContainer}>
-          <h2 className="h2">Remarkable</h2>
-          <h2 className={clsx('h2', 'bold')}>Virtual Experiences</h2>
+          <p className={styles.identity}>ZHAO QINGZHUO · AI PRODUCT MANAGER</p>
+          <p className={styles.location}>NANJING / CHINA · PORTFOLIO 2026</p>
         </div>
-        {!isMobile && (
-          <h6 className={clsx('h6', styles.rightContainer)}>
-            With years of experience, I create immersive digital environments that elevate your virtual presence. Join me in redefining digital interaction.
-          </h6>
-        )}
+        {!isMobile && <p className={styles.rightContainer}>东南大学建筑学硕士 · AI 产品 / 用户研究 / 原型设计</p>}
       </div>
 
       <div className={styles.bottomContainer}>
-        <FloatingMeshes />
+        <Image priority className={styles.artworkBackdrop} src="/garden-landscape-hero.png" alt="赵庆卓园林设计作品：青绿山水与江南园林长卷" fill sizes="(max-width: 700px) 92vw, 94vw" quality={86} />
         <div onMouseEnter={onMouseEnter} onMouseLeave={onMouseLeave} className={styles.svgWrapper}>
           <svg ref={svgRef} width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none">
             <rect x="0" y="0" className={styles.mask2} width="100%" height="100.3%" />
@@ -250,12 +243,12 @@ function Home() {
       </div>
       {isMobile && (
         <div className={styles.rightContainerMobile}>
-          <h6 className="h6"> With years of experience, I create immersive digital environments that elevate your virtual presence. Join me in redefining digital interaction.</h6>
+          <p>东南大学建筑学硕士 · AI 产品 / 用户研究 / 原型设计</p>
         </div>
       )}
 
       <div ref={infiniteTextRef} className={styles.infiniteContainer}>
-        <InfiniteText text="Scroll Down" length={5} />
+        <InfiniteText text="SCROLL TO EXPLORE" length={5} />
       </div>
     </section>
   );

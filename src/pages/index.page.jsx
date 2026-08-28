@@ -1,40 +1,13 @@
 /* eslint-disable react/jsx-props-no-spreading */
 import Home from '@src/pages/components/home/Index';
 import About from '@src/pages/components/about/Index';
-import Quote from '@src/pages/components/quote/Index';
 import Projects from '@src/pages/components/projects/Index';
-import Clients from '@src/pages/components/clients/Index';
 import CustomHead from '@src/components/dom/CustomHead';
 
 const seo = {
-  title: 'Giats - Frontend Developer Portfolio',
-  description:
-    'Self-taught front-end developer from Greece, crafting sleek and efficient web, desktop, and mobile apps. Combining creativity and technical skill to deliver innovative user-centric solutions.',
-  keywords: [
-    'Giats',
-    'Evangelos Giatsidis',
-    'Frontend',
-    'Engineer',
-    'Portfolio',
-    'Web Development',
-    'React Developer',
-    'Developer',
-    'Web Applications',
-    'Responsive Design',
-    'Progressive Web Apps',
-    'Freelance Developer',
-    'Modern Web Development',
-    'cross-platform development',
-    'Greek',
-    'JavaScript',
-    'Typescript',
-    'Next.js',
-    'React',
-    'React Native',
-    'Electron js',
-    'HTML',
-    'CSS',
-  ],
+  title: '赵庆卓｜AI 产品经理作品集',
+  description: '赵庆卓的 AI 产品经理作品集，关注真实工作流、用户决策与可信的人机协作。',
+  keywords: ['赵庆卓', 'AI 产品经理', '产品经理', 'Portfolio', 'AI Product Manager', '用户研究', '产品设计'],
 };
 
 function Page() {
@@ -43,8 +16,6 @@ function Page() {
       <CustomHead {...seo} />
       <Home />
       <About />
-      <Clients />
-      <Quote />
       <Projects />
     </>
   );

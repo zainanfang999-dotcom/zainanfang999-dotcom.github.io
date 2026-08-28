@@ -8,8 +8,7 @@
   position: relative;
   display: flex;
   flex-direction: column;
-  padding: calc(var(--layout-columns-gap) + 3.1vw) var(--layout-margin)
-    calc(var(--layout-columns-gap) * 2);
+  padding: calc(var(--layout-columns-gap) + 3.1vw) var(--layout-margin) calc(var(--layout-columns-gap) * 2);
 
   box-shadow:
     inset 0 calc(var(--layout-columns-gap) + 3.2vw) 0 0 var(--white),
@@ -18,8 +17,7 @@
     inset calc(var(--layout-margin) * 1.05) 0 0 0 var(--white);
 
   @include mobile {
-    padding: calc(var(--layout-columns-gap) + 6.5vw) var(--layout-margin)
-      calc(var(--layout-columns-gap) * 2);
+    padding: calc(var(--layout-columns-gap) + 6.5vw) var(--layout-margin) calc(var(--layout-columns-gap) * 2);
     box-shadow:
       inset 0 calc(var(--layout-columns-gap) + 6.6vw) 0 0 var(--white),
       inset calc(var(--layout-margin) * -1.1001) 0 0 0 var(--white),
@@ -39,14 +37,36 @@
       grid-column: 1 / 9;
       height: auto;
       display: flex;
-      flex-direction: column;
+      align-items: center;
+      gap: 1.1rem;
       @include mobile {
         width: 100%;
+        align-items: flex-start;
+        gap: 0.35rem;
+      }
+      .identity,
+      .location {
+        margin: 0;
+        font-size: clamp(0.62rem, 0.72vw, 0.82rem);
+        line-height: 1.2;
+        letter-spacing: 0.15em;
+        font-weight: 650;
+      }
+      .location {
+        color: #0f8f79;
+        font-family: monospace;
+        font-weight: 500;
       }
     }
     .rightContainer {
       height: auto;
       grid-column: 11 / 17;
+      margin: 0;
+      font-size: clamp(0.68rem, 0.78vw, 0.9rem);
+      line-height: 1.6;
+      text-align: right;
+      letter-spacing: 0.08em;
+      color: #5a5a56;
     }
   }
 
@@ -58,6 +78,8 @@
     box-shadow: 0 0 0 1vw var(--white);
 
     border-radius: var(--layout-columns-gap);
+    overflow: hidden;
+    background: #deded9;
 
     @include mobile {
       width: 100%;
@@ -67,10 +89,23 @@
       box-shadow: 0 0 0 2vw var(--white);
       border-radius: calc(var(--layout-columns-gap) * 0.5);
     }
+    .artworkBackdrop {
+      position: absolute;
+      z-index: 0;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center;
+      pointer-events: none;
+      transform: scale(1.015);
+      filter: saturate(0.96) contrast(1.015) brightness(1.01);
+    }
     .svgWrapper {
       width: 100.1%;
       height: 100%;
       position: absolute;
+      z-index: 3;
       top: 0;
       left: 0;
 

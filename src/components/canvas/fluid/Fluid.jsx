@@ -77,10 +77,33 @@ function Fluid({ mainRef, fluidColor }) {
     }
 
     const shaderUpdates = [
-      { material: 'curl', uniforms: { uVelocity: FBOs.velocity.read.texture }, target: 'curl' },
-      { material: 'vorticity', uniforms: { uVelocity: FBOs.velocity.read.texture, uCurl: FBOs.curl.texture, uCurlValue: curl }, target: 'velocity' },
-      { material: 'divergence', uniforms: { uVelocity: FBOs.velocity.read.texture }, target: 'divergence' },
-      { material: 'clear', uniforms: { uTexture: FBOs.pressure.read.texture, uClearValue: pressure }, target: 'pressure' },
+      {
+        material: 'curl',
+        uniforms: { uVelocity: FBOs.velocity.read.texture },
+        target: 'curl',
+      },
+      {
+        material: 'vorticity',
+        uniforms: {
+          uVelocity: FBOs.velocity.read.texture,
+          uCurl: FBOs.curl.texture,
+          uCurlValue: curl,
+        },
+        target: 'velocity',
+      },
+      {
+        material: 'divergence',
+        uniforms: { uVelocity: FBOs.velocity.read.texture },
+        target: 'divergence',
+      },
+      {
+        material: 'clear',
+        uniforms: {
+          uTexture: FBOs.pressure.read.texture,
+          uClearValue: pressure,
+        },
+        target: 'pressure',
+      },
     ];
 
     shaderUpdates.forEach(({ material, uniforms, target }) => {

@@ -1,83 +1,34 @@
-![giats.me cover](/public/og.png)
+# 赵庆卓｜AI 产品经理作品集
 
-# giats.me — Personal Portfolio Website
+赵庆卓的个人作品集网站，展示已完成的 AI 产品、空间数据工具、科研流程自动化项目，以及个人建筑设计与水彩作品。
 
-This is the **original source code** for [giats.me](https://giats.me), the personal portfolio website of **Evangelos Giatsidis**.
+## 项目内容
 
-I designed and built this project from scratch using modern web technologies to push the creative limits of front-end development. The site blends smooth animation, layered visuals, and technical precision to present my work in a unique and immersive way.
+- Wardrobe Wise：AI 衣橱与消费决策产品
+- GeoField Analyzer：空间数据工作流工具
+- 场景实验问卷工具：科研问卷配置与填写原型
+- 建筑与园林设计作品
+- 个人原创水彩作品
 
-> 🏆 **Multi-award-winning site, featured on major design platforms**:
->
-> - 🥇 [CSS Design Awards — WOTD + 3 Special Kudos](https://www.cssdesignawards.com/sites/giats-portfolio/46067/)
-> - 🥈 [Awwwards — Honorable Mention](https://www.awwwards.com/sites/https-giats-me)
-> - 🥉 [GSAP — Site of the Day](https://gsap.com/showcase/?page=1)
+## 本地运行
 
----
+```bash
+npm install
+npm run dev
+```
 
-## ⭐ Show Some Love
+默认访问地址：`http://localhost:3001`（也可以使用 Next.js 默认端口）。
 
-If you find this project useful, inspiring, or just cool, please consider giving it a star on GitHub!  
-Your support helps me keep improving and sharing my work. Thank you! 🙏
+## 技术
 
----
+Next.js、React、GSAP、React Three Fiber、SCSS。
 
-## 🧠 Concept & Structure
+## 设计来源与署名
 
-The visual foundation of giats.me is built around a **three-phase layering system**:
+本网站在 [Evangelos Giatsidis / Giats Portfolio](https://github.com/Giats2498/giats-portfolio) 的开源框架基础上进行重构，保留原作者要求的署名。
 
-1. **The Background Phase**  
-   A dynamic, animated 3D world rendered with React Three Fiber, serving as the visual foundation of the site.
+网站内容、项目截图、建筑作品和绘画作品归赵庆卓所有，请勿擅自转载或用于商业用途。
 
-2. **The Main Website Phase**  
-   This layer contains all the actual content — projects, about section, contact, etc. Structurally clean and minimal to let animations breathe.
+## 联系方式
 
-3. **The Fluid Animation Layer (Above All)**  
-   A real-time fluid simulation overlays the entire interface, using `mix-blend-mode` and the cursor to create an interactive, artistic brush effect. It responds to user input, adding a subtle but powerful sense of depth and responsiveness.
-
-### 🪟 “Window” Effect
-
-Throughout the content layer, I created intentional **cut-out sections** or “windows” that act as **holes in the layout**, letting the background animation show through. These openings create a surreal experience where the layers visually bleed into each other, amplifying the immersive feel of the site.
-
----
-
-## ⚙️ Tech Stack
-
-- **Framework:** [Next.js](https://nextjs.org/) (React)
-- **3D & Canvas:** [React Three Fiber](https://docs.pmnd.rs/react-three-fiber)
-- **Animation:** [GSAP](https://greensock.com/gsap/) with ScrollTrigger
-- **Transitions & Scroll UX:** Custom GSAP-powered page transitions and smooth scroll behavior
-- **Styling:** SCSS / CSS Modules
-- **Hosting:** [Vercel](https://vercel.com)
-
----
-
-## 📸 Assets & Privacy Notice
-
-- Personal and client-related visuals (e.g., images, logos, portraits) have been **blurred, replaced, or omitted** to respect privacy and copyright.
-- The full visual experience is available at [giats.me](https://giats.me).
-- **Do not reuse images or branding without permission.**
-
----
-
-## 📄 License & Attribution
-
-This project is licensed under the **MIT License (with attribution required)**.
-
-> If you use this code or parts of it, **credit is required**:
->
-> _"Original portfolio design and development by Evangelos Giatsidis — [giats.me](https://giats.me)"_
-
-You are welcome to learn from or build upon this project, but **do not claim it as your own or use it commercially without permission.**
-
----
-
-## 📬 Contact
-
-- 📧 Email: [vaggelisgiats@gmail.com](mailto:vaggelisgiats@gmail.com)
-- 💼 LinkedIn: [linkedin.com/in/giats](https://www.linkedin.com/in/giats/)
-- 🌐 Website: [giats.me](https://giats.me)
-- 🐦 X (Twitter): [@Giats\_](https://x.com/Giats_)
-
----
-
-Thank you for checking out my portfolio. I hope this project inspires or helps you in your own creative journey.
+[zai_nanfang@163.com](mailto:zai_nanfang@163.com)

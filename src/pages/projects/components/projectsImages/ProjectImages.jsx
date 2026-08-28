@@ -3,7 +3,6 @@
 import { Fragment, useCallback } from 'react';
 
 import Image from 'next/image';
-import PropTypes from 'prop-types';
 import clsx from 'clsx';
 import styles from '@src/pages/projects/components/projectsImages/styles/projectImages.module.scss';
 import useIsMobile from '@src/hooks/useIsMobile';
@@ -24,7 +23,12 @@ function ProjectImages({ project }) {
       }
       if (tag === 'small') {
         return (
-          <div style={{ gridColumn: !isMobile ? (!isRight ? '1 / 9' : ' 9 / 17') : !isRight ? '1 / 4' : ' 4 / 7' }} className={styles.imageContainer}>
+          <div
+            style={{
+              gridColumn: !isMobile ? (!isRight ? '1 / 9' : ' 9 / 17') : !isRight ? '1 / 4' : ' 4 / 7',
+            }}
+            className={styles.imageContainer}
+          >
             <Image priority sizes="100%" src={src} fill alt={`Image-${title}-${index}`} />
           </div>
         );
@@ -56,18 +60,5 @@ function ProjectImages({ project }) {
     </section>
   );
 }
-
-ProjectImages.propTypes = {
-  project: PropTypes.shape({
-    title: PropTypes.string.isRequired,
-    images: PropTypes.arrayOf(
-      PropTypes.shape({
-        tag: PropTypes.string.isRequired,
-        src: PropTypes.string.isRequired,
-        isRight: PropTypes.bool,
-      }),
-    ).isRequired,
-  }).isRequired,
-};
 
 export default ProjectImages;

@@ -76,7 +76,7 @@
 
   &:nth-child(1) {
     &::before {
-      content: 'Sitemap';
+      content: '导航 / Sitemap';
 
       font-weight: 700;
       margin-bottom: var(--layout-columns-gap);
@@ -87,7 +87,7 @@
     counter-reset: menulist2 4;
     &::before {
       font-weight: 700;
-      content: 'Selected Projects';
+      content: '精选项目 / Selected Projects';
 
       margin-bottom: var(--layout-columns-gap);
     }
@@ -101,7 +101,7 @@
   &:nth-child(4) {
     &::before {
       font-weight: 700;
-      content: 'Follow Us';
+      content: '链接 / Links';
       margin-bottom: var(--layout-columns-gap);
     }
   }

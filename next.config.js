@@ -1,6 +1,10 @@
 /** @type {import('next').NextConfig} */
+const isStaticExport = process.env.GITHUB_PAGES === 'true';
+
 const nextConfig = {
   pageExtensions: ['page.jsx'],
+  output: isStaticExport ? 'export' : undefined,
+  trailingSlash: isStaticExport,
   experimental: {
     // optimizeCss: true,
     // nextScriptWorkers: true,
@@ -11,7 +15,9 @@ const nextConfig = {
   // },
   reactStrictMode: false, // Recommended for the `pages` directory, default in `app`.
 
-  images: {},
+  images: {
+    unoptimized: isStaticExport,
+  },
   webpack(config, { isServer }) {
     // config.resolve.alias = {
     //   ...config.resolve.alias,
@@ -32,37 +38,23 @@ const nextConfig = {
 
     return config;
   },
-  headers: async () => [
+};
+
+if (!isStaticExport) {
+  nextConfig.headers = async () => [
     {
       source: '/(.*)',
       headers: [
-        {
-          key: 'X-Content-Type-Options',
-          value: 'nosniff',
-        },
-        {
-          key: 'X-Frame-Options',
-          value: 'SAMEORIGIN',
-        },
-        {
-          key: 'X-XSS-Protection',
-          value: '1; mode=block',
-        },
+        { key: 'X-Content-Type-Options', value: 'nosniff' },
+        { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
+        { key: 'X-XSS-Protection', value: '1; mode=block' },
       ],
     },
-  ],
-  redirects: async () => [
-    {
-      source: '/home',
-      destination: '/',
-      permanent: true,
-    },
-    {
-      source: '/404',
-      destination: '/',
-      permanent: true,
-    },
-  ],
-};
+  ];
+  nextConfig.redirects = async () => [
+    { source: '/home', destination: '/', permanent: true },
+    { source: '/404', destination: '/', permanent: true },
+  ];
+}
 
 module.exports = nextConfig;

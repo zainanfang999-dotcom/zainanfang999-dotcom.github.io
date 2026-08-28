@@ -1,0 +1,844 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>水岸恢复性与吸引力评价问卷</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Manrope:wght@400;500;600;700&family=Noto+Serif+SC:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0b3338;--ink-soft:#3a565a;--teal:#1f8a8c;--teal-deep:#0f6e72;--aqua:#36b6b0;
+    --cream:#f5f2ea;--paper:#fffdf8;--line:#d8e6e4;--line-soft:#e8efed;
+    --shadow:0 1px 2px rgba(11,51,56,.04),0 8px 28px rgba(11,51,56,.07);
+    --shadow-lg:0 4px 12px rgba(11,51,56,.08),0 20px 60px rgba(11,51,56,.12);
+    --warn:#c2742a;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{
+    font-family:'Manrope','Noto Serif SC',sans-serif;color:var(--ink);
+    background:
+      radial-gradient(120% 80% at 80% -10%, rgba(54,182,176,.14), transparent 60%),
+      radial-gradient(100% 70% at -10% 10%, rgba(31,138,140,.10), transparent 55%),
+      var(--cream);
+    background-attachment:fixed;line-height:1.6;-webkit-font-smoothing:antialiased;padding-bottom:96px;
+  }
+  .wrap{max-width:920px;margin:0 auto;padding:0 22px}
+  header{padding:54px 0 26px}
+  .kicker{font-size:12px;letter-spacing:.28em;text-transform:uppercase;color:var(--teal);font-weight:600;margin-bottom:14px}
+  h1{font-family:'Fraunces','Noto Serif SC',serif;font-weight:500;font-size:clamp(30px,5vw,46px);line-height:1.12;letter-spacing:-.01em}
+  h1 .em{font-style:italic;color:var(--teal-deep)}
+  .wave{height:3px;width:90px;margin-top:22px;border-radius:3px;background:linear-gradient(90deg,var(--teal),var(--aqua))}
+
+  .card{background:var(--paper);border:1px solid var(--line-soft);border-radius:18px;box-shadow:var(--shadow);padding:28px 30px;margin:20px 0}
+  .card-h{display:flex;align-items:baseline;gap:12px;margin-bottom:6px}
+  .card-h .no{font-family:'Fraunces',serif;font-style:italic;font-size:13px;color:var(--teal);font-weight:500;letter-spacing:.04em}
+  .card-h h2{font-family:'Fraunces','Noto Serif SC',serif;font-weight:500;font-size:23px}
+  .card-note{color:var(--ink-soft);font-size:13.5px;margin-bottom:18px}
+
+  /* Instruction card */
+  .intro{border-left:5px solid var(--teal)}
+  .intro p{font-size:14.5px;color:var(--ink-soft);margin-bottom:12px}
+  .intro p strong{color:var(--ink)}
+  .intro .scale{background:#f1f8f7;border:1px solid var(--line);border-radius:12px;padding:13px 16px;font-size:13.5px;color:var(--ink-soft);margin-top:6px}
+  .intro .scale b{color:var(--teal-deep)}
+
+  .section-label{display:inline-block;font-size:12px;font-weight:700;letter-spacing:.06em;color:var(--teal-deep);text-transform:uppercase;margin:22px 0 10px;padding-bottom:4px;border-bottom:2px solid var(--line)}
+  .section-label:first-of-type{margin-top:6px}
+
+  .field{margin-bottom:16px}
+  .field label{display:block;font-weight:600;font-size:14.5px;margin-bottom:7px}
+  .field .hint{font-weight:400;color:var(--ink-soft);font-size:13px;margin-left:6px}
+  input[type=text],input[type=number],select{width:100%;font-family:inherit;font-size:14.5px;color:var(--ink);background:#fff;border:1px solid var(--line);border-radius:10px;padding:10px 13px;transition:border-color .15s,box-shadow .15s}
+  input:focus,select:focus{outline:none;border-color:var(--teal);box-shadow:0 0 0 3px rgba(31,138,140,.12)}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media(max-width:560px){.grid2{grid-template-columns:1fr}}
+
+  .item{padding:15px 0;border-bottom:1px dashed var(--line)}
+  .item:last-child{border-bottom:none}
+  .item-top{display:flex;justify-content:space-between;align-items:baseline;gap:14px;flex-wrap:wrap}
+  .item-name{font-weight:700;font-size:15px}
+  .item-name .code{color:var(--teal);font-family:'Fraunces',serif;font-style:italic;margin-right:6px}
+  .item-desc{font-size:13.5px;color:var(--ink-soft);margin-top:4px;max-width:560px}
+  .likert{display:flex;gap:8px;margin-top:2px;flex-shrink:0}
+  .likert button{width:42px;height:42px;border-radius:11px;border:1.5px solid var(--line);background:#fff;cursor:pointer;font-family:'Fraunces',serif;font-size:17px;color:var(--ink-soft);transition:all .14s ease}
+  .likert button:hover{border-color:var(--aqua);color:var(--teal-deep);transform:translateY(-2px)}
+  .likert button.sel{background:linear-gradient(145deg,var(--teal),var(--teal-deep));border-color:var(--teal-deep);color:#fff;font-weight:500;box-shadow:0 4px 12px rgba(15,110,114,.32);transform:translateY(-1px)}
+  .scale-key{font-size:11.5px;color:var(--ink-soft);text-align:right;margin-top:10px}
+
+  /* Photo layout update for dual photos */
+  .photo-container{margin:8px 0 18px}
+  .photo-slot{border:1px dashed var(--line);border-radius:12px;overflow:hidden;background:#fbfcfb;text-align:center}
+  .photo-slot img{display:block;width:100%;height:auto;border-radius:12px}
+  .photo-slot .ph{padding:20px;color:var(--ink-soft);font-size:13px}
+
+  .setup{background:linear-gradient(135deg,#0f3d41,#0b3338);color:#eafaf8;border-radius:18px;padding:24px 26px;margin:20px 0;box-shadow:var(--shadow-lg)}
+  .setup h3{font-family:'Fraunces',serif;font-weight:500;font-size:19px;margin-bottom:4px}
+  .setup p{font-size:13px;color:#bfe4e1;margin-bottom:16px;line-height:1.55}
+  .setup-row{display:flex;gap:16px;align-items:flex-end;flex-wrap:wrap;margin-bottom:14px}
+  .setup label{font-size:12.5px;color:#bfe4e1;font-weight:600;display:block;margin-bottom:6px}
+  .setup input{background:rgba(255,255,255,.95);border:none;color:var(--ink)}
+  .setup input#snum{max-width:110px}
+  .setup .step{display:flex;align-items:center;gap:10px;margin:18px 0 8px;font-size:13px;color:#9ed4d0;font-weight:600;letter-spacing:.03em}
+  .setup .step span{display:inline-flex;width:22px;height:22px;border-radius:50%;background:var(--aqua);color:#05292c;font-family:'Fraunces',serif;align-items:center;justify-content:center;font-size:13px;flex-shrink:0}
+
+  .btn{font-family:inherit;font-weight:600;font-size:14px;cursor:pointer;border:none;border-radius:11px;padding:11px 20px;transition:all .15s;display:inline-flex;align-items:center;gap:8px}
+  .btn-primary{background:var(--teal-deep);color:#fff;box-shadow:0 4px 14px rgba(15,110,114,.3)}
+  .btn-primary:hover{background:var(--teal);transform:translateY(-1px)}
+  .btn-ghost{background:#fff;color:var(--teal-deep);border:1.5px solid var(--line)}
+  .btn-ghost:hover{border-color:var(--teal);background:#f6fbfa}
+  .setup .btn-ghost{background:rgba(255,255,255,.12);color:#eafaf8;border:1px solid rgba(255,255,255,.28)}
+  .setup .btn-ghost:hover{background:rgba(255,255,255,.2)}
+  .setup .btn-accent{background:var(--aqua);color:#05292c;box-shadow:0 4px 14px rgba(54,182,176,.35)}
+  .setup .btn-accent:hover{background:#46c6c0;transform:translateY(-1px)}
+
+  .actionbar{position:fixed;bottom:0;left:0;right:0;z-index:50;background:rgba(255,253,248,.92);backdrop-filter:blur(12px);border-top:1px solid var(--line);box-shadow:0 -6px 24px rgba(11,51,56,.07)}
+  .actionbar-in{max-width:920px;margin:0 auto;padding:11px 22px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+  .progress-line{height:4px;background:var(--line-soft);border-radius:4px;overflow:hidden;flex:1 0 100%;margin-bottom:6px}
+  .progress-line i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--teal),var(--aqua));transition:width .3s}
+  .counter{font-size:13px;color:var(--ink-soft);margin-right:auto}
+  .counter b{color:var(--teal-deep);font-size:15px;font-family:'Fraunces',serif}
+
+  #toast{position:fixed;bottom:84px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--ink);color:#fff;padding:12px 22px;border-radius:12px;font-size:14px;font-weight:600;opacity:0;pointer-events:none;transition:all .3s;z-index:100;box-shadow:var(--shadow-lg)}
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  #toast.warn{background:var(--warn)}
+
+  .mode-tag{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:4px 11px;border-radius:20px;margin-bottom:14px}
+  .mode-editor{background:#0f3d41;color:#9ed4d0}
+  .mode-fill{background:#e6f4f1;color:var(--teal-deep)}
+
+  footer{text-align:center;color:var(--ink-soft);font-size:13px;padding:28px 0 10px}
+  .req{color:#c0563f}
+  .hidden{display:none}
+  .photo-cap{display:flex;gap:8px;font-size:11px;color:var(--ink-soft);margin:-6px 0 12px;flex-wrap:wrap}
+  .photo-cap span{background:#eef5f3;border:1px solid var(--line);border-radius:8px;padding:3px 8px}
+</style>
+</head>
+<body>
+
+<header class="wrap">
+  <div class="kicker">Waterfront Restoration &amp; Attractiveness</div>
+  <span class="mode-tag" id="modeTag"></span>
+  <h1>水岸<span class="em">恢复性效益</span>与<span class="em">吸引力</span>评价问卷</h1>
+  <div class="wave"></div>
+</header>
+
+<main class="wrap">
+
+  <div class="card intro" id="introCard">
+    <div class="card-h"><h2>问卷说明</h2></div>
+    <p>本问卷旨在了解您对<strong>水岸环境</strong>的主观感受，重点关注两方面：水景的<strong>视觉感受</strong>，以及它带给您的<strong>恢复性效益</strong>（即放松身心、缓解压力的作用）。</p>
+    <p>问卷分两部分：<strong>第一部分</strong>请您结合每张水岸照片组合（包含两张环境注记照片），逐一对该场景打分；<strong>第二部分</strong>请基于整段水岸的整体体验进行综合评价。所有评分均为 1–5 分，<strong>分数越高代表该感受越强烈</strong>，请凭真实感受作答。</p>
+    <div class="scale"><b>评分含义　</b>① 完全不符合　② 较不符合　③ 一般　④ 较符合　⑤ 完全符合</div>
+  </div>
+
+  <div class="setup" id="setupPanel">
+    <h3>问卷编辑器（研究者自动化专用）</h3>
+    <p>支持两种导入方式：①直接导入被试照片<b>文件夹</b>；②导入 <b>KMZ 文件</b>（自动读取其中的点位与照片）。均会按<b>照片拍摄时间</b>从早到晚排序，每张照片对应一个场景。</p>
+
+    <div class="step"><span>1</span>导入被试整套照片（任选一种）</div>
+    <div class="setup-row">
+      <div style="flex:1; min-width:220px;">
+        <label>方式一：选择照片文件夹</label>
+        <input type="file" id="folderInput" webkitdirectory directory multiple style="display:none" onchange="importFolder(event)">
+        <button class="btn btn-accent" style="width:100%; justify-content:center" onclick="document.getElementById('folderInput').click()">📁 选择文件夹导入</button>
+      </div>
+      <div style="flex:1; min-width:220px;">
+        <label>方式二：选择 KMZ 文件</label>
+        <input type="file" id="kmzInput" accept=".kmz,application/vnd.google-earth.kmz" style="display:none" onchange="importKMZ(event)">
+        <button class="btn btn-accent" style="width:100%; justify-content:center" onclick="document.getElementById('kmzInput').click()">🗺 选择 KMZ 导入</button>
+      </div>
+      <div>
+        <label>被试姓名（导入后自动覆盖）</label>
+        <input type="text" id="snameSetup" placeholder="如 张三">
+      </div>
+    </div>
+    <div id="importStatus" style="font-size:13px; color:#9ed4d0; margin:-4px 0 12px 4px; font-weight:500"></div>
+
+    <div class="setup-row" style="border-top:1px dashed rgba(255,255,255,0.15); padding-top:16px;">
+      <div>
+        <label>手动修正场景数量</label>
+        <input type="number" id="snum" value="5" min="1" max="60">
+      </div>
+      <button class="btn btn-ghost" onclick="buildFromSetup()">⟳ 手动重置/更新</button>
+    </div>
+
+    <div class="step"><span>2</span>生成并导出该被试专属网页</div>
+    <div class="setup-row">
+      <button class="btn btn-primary" style="background:var(--aqua); color:#05292c" onclick="exportWebpage()">💾 保存并生成独立填写网页</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-h"><span class="no">A</span><h2>被试信息</h2></div>
+    <div class="grid2">
+      <div class="field">
+        <label>被试姓名 <span class="req">*</span></label>
+        <input type="text" id="pname" placeholder="请输入姓名">
+      </div>
+      <div class="field">
+        <label>年龄</label>
+        <input type="number" id="age" placeholder="岁" min="0" max="120">
+      </div>
+      <div class="field">
+        <label>亲水经历 <span class="hint">日常接触水景的频率</span></label>
+        <select id="waterexp">
+          <option value="">请选择</option>
+          <option>很少</option><option>偶尔</option><option>经常</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>专业背景 <span class="hint">是否风景园林/相关专业</span></label>
+        <select id="major">
+          <option value="">请选择</option>
+          <option>相关专业</option><option>非相关专业</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <div id="scenes"></div>
+
+  <div class="card">
+    <div class="card-h"><span class="no">B</span><h2>整体水景视觉评价</h2></div>
+    <p class="card-note">回顾本次完整的水岸行走体验，按近景、中景、远景三个尺度层级，对整体水景的视觉感受进行综合评价。</p>
+    <div id="part2"></div>
+    <div class="scale-key">① 完全不符合 ② 较不符合 ③ 一般 ④ 较符合 ⑤ 完全符合</div>
+  </div>
+
+  <footer>水岸恢复性与吸引力研究 · 数据可导出为 CSV / JSON 用于后期分析</footer>
+</main>
+
+<div class="actionbar">
+  <div class="actionbar-in">
+    <div class="progress-line"><i id="progBar"></i></div>
+    <div class="counter">已收集 <b id="count">0</b> 份 · 本份完成 <b id="pct">0%</b></div>
+    <button class="btn btn-ghost" onclick="newParticipant()">＋ 新被试</button>
+    <button class="btn btn-ghost" onclick="exportJSON()">⬇ JSON</button>
+    <button class="btn btn-ghost" onclick="exportCSV('long')">⬇ CSV(长表)</button>
+    <button class="btn btn-ghost" onclick="exportCSV('wide')">⬇ CSV(宽表)</button>
+    <button class="btn btn-ghost" onclick="exportWithImages()">🖼 数据+图片(ZIP)</button>
+    <button class="btn btn-primary" onclick="saveParticipant()">✓ 保存本份</button>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+const PRISTINE_HTML = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
+
+const SCENE_ITEMS = [
+  {sec:'A. 水景视觉感受', code:'A1', name:'近处的水景', desc:'我觉得眼前、脚边的近处水面和水岸边（如水质、浪花或亲水台阶）很好看，很吸引我。'},
+  {sec:'A. 水景视觉感受', code:'A2', name:'中间的水面', desc:'放眼望去，湖／河中央那片开阔的水面让我觉得很舒服、赏心悦目。'},
+  {sec:'A. 水景视觉感受', code:'A3', name:'远处的景致', desc:'看远处的对岸风光、建筑轮廓或水天交界的地方，感觉整个画面很有魅力和意境。'},
+  {sec:'A. 水景视觉感受', code:'A4', name:'与周围环境的搭配', desc:'这里的整个水面和周围的树木、草地、建筑或者路桥等搭配得非常自然、和谐，看着很顺眼。'},
+  {sec:'B. 知觉恢复 (PRS)', code:'B1', name:'远离感', desc:'感到远离日常压力，精神得到放松、解脱。'},
+  {sec:'B. 知觉恢复 (PRS)', code:'B2', name:'迷恋感', desc:'场景充满趣味与魅力，轻易吸引我的注意力。'},
+  {sec:'C. 情绪恢复', code:'C1', name:'愉悦度', desc:'心情愉悦、积极（反之为低落压抑）。'},
+  {sec:'C. 情绪恢复', code:'C2', name:'唤醒度', desc:'身心被唤醒、有活力（反之为困倦平淡）。'},
+  {sec:'S. 综合', code:'S',  name:'综合评价', desc:'对该水岸场景的综合喜好程度。'},
+];
+const PART2_ITEMS = [
+  {sec:'近景尺度', code:'P1', name:'整体近景视觉', desc:'回顾整段体验，眼前、脚边的近处水面与水岸边整体上很好看、吸引我。'},
+  {sec:'中景尺度', code:'P2', name:'整体中景视觉', desc:'整段体验中，湖／河中央那片开阔水面整体上让我感到舒适、赏心悦目。'},
+  {sec:'远景尺度', code:'P3', name:'整体远景视觉', desc:'整段体验中，远处对岸风光、建筑轮廓或水天交界整体上很有魅力和意境。'},
+  {sec:'综合', code:'P4', name:'整体环境协调', desc:'整段水景与周围树木、草地、建筑、路桥等整体上搭配自然、和谐。'},
+  {sec:'综合', code:'P5', name:'整体视觉偏好', desc:'总体而言，这段水景的视觉效果令我喜爱，是值得观赏的景致。'},
+];
+
+let NUM_SCENES = 5;
+let scenePhotos = [];      // 每个场景一张代表性照片：[ img_base64, img_base64, ... ]
+let sceneMeta = [];        // 与 scenePhotos 对应的元信息：[ {time,coords,name}, ... ]（KMZ 导入时填充）
+let dataset = [];
+const ratings = {};
+const pad = n => 'NO.'+String(n).padStart(2,'0');
+
+/* ===================== 自动文件夹读取与时间排序核心逻辑 ===================== */
+
+/* ---- EXIF 拍摄时间解析（优先 DateTimeOriginal），返回毫秒或 null ---- */
+function parseExifDate(buf){
+  const dv=new DataView(buf);
+  if(dv.byteLength<14 || dv.getUint16(0)!==0xFFD8) return null;
+  let off=2; const len=dv.byteLength;
+  while(off+4<=len){
+    const mk=dv.getUint16(off);
+    if((mk&0xFF00)!==0xFF00) break;
+    if(mk===0xFFDA) break;
+    const sz=dv.getUint16(off+2);
+    if(mk===0xFFE1){
+      const ex=off+4;
+      if(ex+6<=len && dv.getUint32(ex)===0x45786966 && dv.getUint16(ex+4)===0x0000){
+        const d=readTiffDate(dv,ex+6,len); if(d!=null) return d;
+      }
+    }
+    off+=2+sz;
+  }
+  return null;
+}
+function readTiffDate(dv,tiff,len){
+  if(tiff+8>len) return null;
+  const le=dv.getUint16(tiff)===0x4949;
+  const g16=o=>dv.getUint16(o,le), g32=o=>dv.getUint32(o,le);
+  if(g16(tiff+2)!==0x002A) return null;
+  const rA=(e)=>{ const c=g32(e+4); let p=(c<=4)?(e+8):(tiff+g32(e+8)); let s=''; for(let i=0;i<c && p+i<len;i++){const ch=dv.getUint8(p+i);if(ch===0)break;s+=String.fromCharCode(ch);} return s; };
+  const toMs=(s)=>{ const m=/^(\d{4}):(\d{2}):(\d{2})\s+(\d{1,2}):(\d{2}):(\d{2})/.exec(s||''); return m?new Date(+m[1],+m[2]-1,+m[3],+m[4],+m[5],+m[6]).getTime():null; };
+  const scan=(ifd)=>{ if(ifd+2>len)return{}; const n=g16(ifd); let ep=null,dt=null,dto=null,dtd=null;
+    for(let i=0;i<n;i++){const e=ifd+2+i*12;if(e+12>len)break;const t=g16(e);
+      if(t===0x8769)ep=tiff+g32(e+8); else if(t===0x0132)dt=rA(e); else if(t===0x9003)dto=rA(e); else if(t===0x9004)dtd=rA(e);}
+    return{ep,dt,dto,dtd}; };
+  const a=scan(tiff+g32(tiff+4)); let dto=a.dto,dtd=a.dtd;
+  if((!dto||!dtd)&&a.ep){const b=scan(a.ep);dto=dto||b.dto;dtd=dtd||b.dtd;}
+  return toMs(dto) ?? toMs(dtd) ?? toMs(a.dt);
+}
+
+async function readCaptureTime(file){
+  try{ const buf=await file.slice(0,262144).arrayBuffer(); return parseExifDate(buf); }
+  catch(_){ return null; }
+}
+
+/* ---- 纯前端 ZIP 解压（KMZ 即 ZIP）。支持 store(0) 与 deflate(8) ---- */
+async function inflateRaw(u8){
+  if(typeof DecompressionStream==='undefined') throw new Error('当前浏览器不支持解压，请用较新的 Chrome/Edge');
+  const ds=new DecompressionStream('deflate-raw');
+  const ab=await new Response(new Blob([u8]).stream().pipeThrough(ds)).arrayBuffer();
+  return new Uint8Array(ab);
+}
+async function readZip(arrayBuffer){
+  const dv=new DataView(arrayBuffer), bytes=new Uint8Array(arrayBuffer);
+  let eocd=-1;
+  for(let i=bytes.length-22;i>=0;i--){ if(dv.getUint32(i,true)===0x06054b50){ eocd=i; break; } }
+  if(eocd<0) throw new Error('不是有效的 ZIP/KMZ 文件');
+  const cnt=dv.getUint16(eocd+10,true), cdOff=dv.getUint32(eocd+16,true);
+  const ents=[]; let p=cdOff;
+  for(let i=0;i<cnt;i++){
+    if(dv.getUint32(p,true)!==0x02014b50) break;
+    const method=dv.getUint16(p+10,true), compSize=dv.getUint32(p+20,true);
+    const nameLen=dv.getUint16(p+28,true), extraLen=dv.getUint16(p+30,true), commentLen=dv.getUint16(p+32,true);
+    const localOff=dv.getUint32(p+42,true);
+    const name=new TextDecoder('utf-8').decode(bytes.subarray(p+46,p+46+nameLen));
+    ents.push({name,method,compSize,localOff});
+    p+=46+nameLen+extraLen+commentLen;
+  }
+  const out={};
+  for(const en of ents){
+    const lp=en.localOff;
+    if(dv.getUint32(lp,true)!==0x04034b50) continue;
+    const ln=dv.getUint16(lp+26,true), le=dv.getUint16(lp+28,true);
+    const ds=lp+30+ln+le;
+    const comp=bytes.subarray(ds,ds+en.compSize);
+    if(en.method===0) out[en.name]=comp.slice();
+    else if(en.method===8) out[en.name]=await inflateRaw(comp);
+  }
+  return out;
+}
+
+const _base=p=>p.split('/').pop().split('\\').pop();
+function _bytesToDataURL(bytes,key){
+  const ext=(_base(key).split('.').pop()||'jpg').toLowerCase();
+  const mime=ext==='png'?'image/png':ext==='webp'?'image/webp':ext==='gif'?'image/gif':ext==='bmp'?'image/bmp':'image/jpeg';
+  let bin=''; const CH=0x8000;
+  for(let i=0;i<bytes.length;i+=CH) bin+=String.fromCharCode.apply(null,bytes.subarray(i,i+CH));
+  return 'data:'+mime+';base64,'+btoa(bin);
+}
+
+/* ---- KMZ 导入：解压→读 KML 点位/照片→按拍摄时间排序→每2张一场景 ---- */
+async function importKMZ(e){
+  const file=e.target.files[0]; e.target.value='';
+  if(!file) return;
+  const status=document.getElementById('importStatus');
+  status.textContent='正在解压 KMZ...';
+  try{
+    const files=await readZip(await file.arrayBuffer());
+    const kmlName=Object.keys(files).find(n=>/\.kml$/i.test(n));
+    if(!kmlName) throw new Error('KMZ 内未找到 .kml 文件');
+    const xml=new DOMParser().parseFromString(new TextDecoder('utf-8').decode(files[kmlName]),'application/xml');
+    if(xml.getElementsByTagName('parsererror').length) throw new Error('KML 内容解析失败');
+
+    // 建立压缩包内图片索引（按文件名小写）
+    const imgByBase={};
+    Object.keys(files).forEach(n=>{ if(/\.(jpe?g|png|webp|gif|bmp)$/i.test(n)) imgByBase[_base(n).toLowerCase()]=n; });
+
+    const tFirst=(el,tag)=>{ const x=el.getElementsByTagName(tag); return x.length? (x[0].textContent||'').trim():''; };
+    const whenMs=s=>{ const t=Date.parse(s); return isNaN(t)?null:t; };
+    const abOf=u8=>u8.buffer.slice(u8.byteOffset,u8.byteOffset+u8.byteLength);
+    const resolveImg=href=>{
+      if(!href) return null;
+      let h=href.replace(/^\.\//,'').replace(/^file:\/\//,'').replace(/^\//,'');
+      if(files[h]) return h;
+      return imgByBase[_base(h).toLowerCase()]||null;
+    };
+
+    const placemarks=[...xml.getElementsByTagName('Placemark')];
+    const photos=[];   // {bytes,key,time,timeSrc,name,coords}
+    placemarks.forEach((pm,idx)=>{
+      const name=tFirst(pm,'name');
+      const coords=(tFirst(pm,'coordinates')||'').split(/\s+/).filter(Boolean)[0]||'';
+      const when=tFirst(pm,'when')||tFirst(pm,'begin')||'';
+      const hrefs=[];
+      const desc=tFirst(pm,'description');
+      if(desc){ const re=/<img[^>]+src=["']?([^"'\s>)]+)/ig; let m; while((m=re.exec(desc))) hrefs.push(m[1]); }
+      [...pm.getElementsByTagName('href')].forEach(h=>hrefs.push((h.textContent||'').trim()));
+      hrefs.forEach(href=>{
+        const key=resolveImg(href); if(!key) return;
+        const bytes=files[key];
+        const exif=parseExifDate(abOf(bytes));
+        let time,src;
+        if(exif!=null){time=exif;src='exif';}
+        else if(whenMs(when)!=null){time=whenMs(when);src='kml';}
+        else {time=idx;src='order';}
+        photos.push({bytes,key,time,timeSrc:src,name,coords});
+      });
+    });
+
+    // 若点位中未引用到照片，则回退：直接用压缩包内全部图片
+    let usedFallback=false;
+    if(photos.length===0){
+      usedFallback=true;
+      Object.values(imgByBase).forEach((key,i)=>{
+        const bytes=files[key]; const exif=parseExifDate(abOf(bytes));
+        photos.push({bytes,key,time:exif!=null?exif:i,timeSrc:exif!=null?'exif':'order',name:'',coords:''});
+      });
+    }
+    if(photos.length===0) throw new Error('未在 KMZ 中找到任何照片');
+
+    photos.sort((a,b)=>a.time-b.time);   // 按拍摄时间从早到晚
+
+    status.textContent='正在生成预览（'+photos.length+' 张照片）...';
+    scenePhotos=[]; sceneMeta=[];
+    const metaOf=p=>({time:p.time,timeSrc:p.timeSrc,name:p.name,coords:p.coords});
+    for(let i=0;i<photos.length;i++){
+      const a=photos[i];
+      scenePhotos.push(a?_bytesToDataURL(a.bytes,a.key):'');
+      sceneMeta.push(a?metaOf(a):null);
+    }
+    NUM_SCENES=scenePhotos.length;
+    document.getElementById('snum').value=NUM_SCENES;
+
+    const docName=tFirst(xml,'name');
+    if(docName && !document.getElementById('snameSetup').value){
+      document.getElementById('snameSetup').value=docName;
+      document.getElementById('pname').value=docName;
+    }
+
+    buildScenes();
+    const c=src=>photos.filter(p=>p.timeSrc===src).length;
+    status.innerHTML=`成功解析 KMZ：点位 ${placemarks.length} 个，照片 ${photos.length} 张 → ${NUM_SCENES} 个场景。`
+      +`<br>排序时间来源：EXIF ${c('exif')} 张 / KML时间 ${c('kml')} 张 / 仅按顺序 ${c('order')} 张`
+      +(usedFallback?'<br>（未在点位描述中找到照片引用，已直接读取压缩包内全部图片）':'');
+    toast('KMZ 导入完成：'+NUM_SCENES+' 个场景');
+  }catch(err){
+    status.textContent='KMZ 解析失败：'+(err&&err.message?err.message:err);
+    toast('KMZ 解析失败',true);
+  }
+}
+function metaText(m){
+  if(!m) return '';
+  const parts=[];
+  if(m.time && m.timeSrc!=='order'){ const d=new Date(m.time); parts.push(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`); }
+  if(m.coords) parts.push('📍'+m.coords);
+  return parts.length?`<span>${parts.join('　')}</span>`:'';
+}
+
+async function importFolder(e) {
+  const files = Array.from(e.target.files);
+  // 过滤出图片格式
+  const imgFiles = files.filter(f => f.type.startsWith('image/'));
+  if (imgFiles.length === 0) {
+    toast('文件夹中未检测到有效的图片文件！', true);
+    return;
+  }
+
+  // 按「拍摄时间」排序：优先 EXIF 拍摄时间，无 EXIF 回退文件修改时间
+  document.getElementById('importStatus').textContent = `正在读取 ${imgFiles.length} 张照片的拍摄时间...`;
+  let exifCount=0; const timed=[];
+  for(let f of imgFiles){ const t=await readCaptureTime(f); if(t!=null) exifCount++; timed.push({file:f,time:(t!=null?t:f.lastModified)}); }
+  timed.sort((a,b)=>a.time-b.time);
+  const sortedFiles=timed.map(x=>x.file);
+  const fallback=imgFiles.length-exifCount;
+  sceneMeta=[];   // 文件夹导入不含点位信息
+
+  document.getElementById('importStatus').textContent = `正在加载并转换 ${imgFiles.length} 张照片...`;
+
+  const readDataURL = (file) => new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.readAsDataURL(file);
+  });
+
+  // 顺序读取图片的 Base64 数据（已按拍摄时间排序）
+  const base64List = [];
+  for (let file of sortedFiles) {
+    const b64 = await readDataURL(file);
+    base64List.push(b64);
+  }
+
+  // 每张照片对应一个场景
+  scenePhotos = base64List.slice();
+  sceneMeta = [];
+
+  NUM_SCENES = scenePhotos.length;
+  document.getElementById('snum').value = NUM_SCENES;
+
+  // 自动用文件夹上级名称或头文字推测姓名
+  let folderName = sortedFiles[0].webkitRelativePath.split('/')[0];
+  if(folderName && !document.getElementById('snameSetup').value) {
+    document.getElementById('snameSetup').value = folderName;
+    document.getElementById('pname').value = folderName;
+  }
+
+  buildScenes();
+  document.getElementById('importStatus').textContent =
+    `成功！共导入 ${imgFiles.length} 张照片，按拍摄时间排序，自动生成 ${NUM_SCENES} 个场景。`
+    + (fallback>0 ? `（其中 ${fallback} 张无 EXIF 拍摄时间，已按文件修改时间排序，请留意核对）` : '');
+  toast(`已按拍摄时间匹配 ${NUM_SCENES} 个场景`);
+}
+
+function likertHTML(key){
+  let b='';
+  for(let v=1;v<=5;v++) b+=`<button data-k="${key}" data-v="${v}" onclick="pick(this)">${v}</button>`;
+  return `<div class="likert">${b}</div>`;
+}
+
+function buildScenes(){
+  let html='';
+  for(let s=1;s<=NUM_SCENES;s++){
+    let items='', lastSec='';
+    SCENE_ITEMS.forEach(it=>{
+      if(it.sec!==lastSec){ items+=`<div class="section-label">${it.sec}</div>`; lastSec=it.sec; }
+      const key=`s${s}_${it.code}`;
+      items+=`<div class="item"><div class="item-top">
+          <div style="flex:1;min-width:200px">
+            <div class="item-name"><span class="code">${it.code}</span>${it.name}</div>
+            <div class="item-desc">${it.desc}</div>
+          </div>${likertHTML(key)}</div></div>`;
+    });
+
+    const photo = scenePhotos[s-1] || '';
+    const photoHtml = photo
+      ? `<img src="${photo}" alt="场景${s}">`
+      : `<div class="ph">（场景代表照片）<br><label class="btn btn-ghost editor-only" style="padding:2px 6px;font-size:11px;margin-top:4px;cursor:pointer">手动上传<input type="file" accept="image/*" style="display:none" onchange="loadSinglePhoto(event,${s})"></label></div>`;
+
+    html+=`<div class="card" data-scene="${s}">
+      <div class="card-h"><span class="no">场景</span><h2>${pad(s)}</h2></div>
+      
+      <div class="photo-container">
+        <div class="photo-slot" id="photo_${s}">${photoHtml}</div>
+      </div>
+      ${ sceneMeta[s-1] ? `<div class="photo-cap">${metaText(sceneMeta[s-1])}</div>` : '' }
+
+      ${items}
+      <div class="scale-key">① 完全不符合 ② 较不符合 ③ 一般 ④ 较符合 ⑤ 完全符合</div>
+    </div>`;
+  }
+  document.getElementById('scenes').innerHTML=html;
+  applyModeVisibility();
+  updateProgress();
+}
+
+function loadSinglePhoto(e, s) {
+  const f = e.target.files[0]; if(!f) return;
+  const r = new FileReader();
+  r.onload=()=>{ 
+    scenePhotos[s-1] = r.result; 
+    document.getElementById(`photo_${s}`).innerHTML = `<img src="${r.result}">`; 
+  };
+  r.readAsDataURL(f);
+}
+
+function buildPart2(){
+  let html='', lastSec='';
+  PART2_ITEMS.forEach(it=>{
+    if(it.sec && it.sec!==lastSec){ html+=`<div class="section-label">${it.sec}</div>`; lastSec=it.sec; }
+    const key='P_'+it.code;
+    html+=`<div class="item"><div class="item-top">
+      <div style="flex:1;min-width:200px">
+        <div class="item-name"><span class="code">${it.code}</span>${it.name}</div>
+        <div class="item-desc">${it.desc}</div>
+      </div>${likertHTML(key)}</div></div>`;
+  });
+  document.getElementById('part2').innerHTML=html;
+}
+
+function buildFromSetup(){
+  NUM_SCENES=Math.max(1,Math.min(60,parseInt(document.getElementById('snum').value)||5));
+  scenePhotos=scenePhotos.slice(0,NUM_SCENES);
+  while(scenePhotos.length < NUM_SCENES) { scenePhotos.push(''); }
+  sceneMeta=sceneMeta.slice(0,NUM_SCENES);
+  while(sceneMeta.length < NUM_SCENES) { sceneMeta.push(null); }
+  const nm=document.getElementById('snameSetup').value.trim();
+  if(nm) document.getElementById('pname').value=nm;
+  buildScenes();
+  toast('已生成 '+NUM_SCENES+' 个场景');
+}
+
+/* ===================== 交互与流程控制 ===================== */
+function pick(btn){
+  const k=btn.dataset.k, v=+btn.dataset.v;
+  ratings[k]=v;
+  document.querySelectorAll(`.likert button[data-k="${k}"]`).forEach(b=>b.classList.remove('sel'));
+  btn.classList.add('sel');
+  updateProgress();
+}
+
+function updateProgress(){
+  const total=NUM_SCENES*SCENE_ITEMS.length+PART2_ITEMS.length;
+  const done=Object.keys(ratings).filter(k=>ratings[k]).length;
+  const pct=total?Math.round(done/total*100):0;
+  document.getElementById('pct').textContent=pct+'%';
+  document.getElementById('progBar').style.width=pct+'%';
+}
+
+function collect(){
+  const rec={
+    name:document.getElementById('pname').value.trim(),
+    age:document.getElementById('age').value.trim(),
+    water_exp:document.getElementById('waterexp').value,
+    major:document.getElementById('major').value,
+    scenes:[], part2:{}, timestamp:new Date().toISOString()
+  };
+  for(let s=1;s<=NUM_SCENES;s++){
+    const sc={scene:pad(s)};
+    SCENE_ITEMS.forEach(it=>{ sc[it.code]=ratings[`s${s}_${it.code}`]||''; });
+    rec.scenes.push(sc);
+  }
+  PART2_ITEMS.forEach(it=>{ rec.part2[it.code]=ratings['P_'+it.code]||''; });
+  return rec;
+}
+
+function saveParticipant(){
+  const rec=collect();
+  if(!rec.name){ toast('请先填写被试姓名',true); document.getElementById('pname').focus(); return; }
+  const total=NUM_SCENES*SCENE_ITEMS.length+PART2_ITEMS.length;
+  const done=Object.keys(ratings).filter(k=>ratings[k]).length;
+  if(done<total && !confirm(`本份尚有 ${total-done} 项未评分，仍要保存吗？`)) return;
+  const idx=dataset.findIndex(d=>d.name===rec.name);
+  if(idx>=0){ dataset[idx]=rec; toast('已更新 '+rec.name); }
+  else { dataset.push(rec); toast('已保存 '+rec.name); }
+  document.getElementById('count').textContent=dataset.length;
+}
+
+function newParticipant(){
+  if(Object.keys(ratings).some(k=>ratings[k]) && !confirm('清空当前问卷，开始新被试？（请确认已保存本份）')) return;
+  for(const k in ratings) delete ratings[k];
+  document.querySelectorAll('.likert button.sel').forEach(b=>b.classList.remove('sel'));
+  ['pname','age'].forEach(id=>document.getElementById(id).value='');
+  ['waterexp','major'].forEach(id=>document.getElementById(id).selectedIndex=0);
+  updateProgress();
+  window.scrollTo({top:0,behavior:'smooth'});
+  toast('已清空');
+}
+
+/* ===================== 数据分析导出 ===================== */
+function download(name,content,type){
+  const blob=new Blob(['\ufeff',content],{type});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob); a.download=name; a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+function snapshot(){
+  const arr=dataset.slice();
+  const cur=collect();
+  const has=cur.name && Object.keys(ratings).some(k=>ratings[k]);
+  if(has && !arr.find(d=>d.name===cur.name)) arr.push(cur);
+  return arr;
+}
+
+function exportJSON(){
+  const arr=snapshot(); if(!arr.length){ toast('暂无数据',true); return; }
+  download('waterfront_data.json',JSON.stringify(arr,null,2),'application/json');
+  toast('已导出 JSON（'+arr.length+'份）');
+}
+
+function csvCell(v){ v=(v==null?'':String(v)); return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v; }
+
+function exportCSV(mode){
+  const arr=snapshot(); if(!arr.length){ toast('暂无数据',true); return; }
+  let rows=[];
+  if(mode==='long'){
+    const head=['name','age','water_exp','major','scene',...SCENE_ITEMS.map(i=>i.code),'timestamp'];
+    rows.push(head.map(csvCell).join(','));
+    arr.forEach(d=>d.scenes.forEach(sc=>{
+      rows.push([d.name,d.age,d.water_exp,d.major,sc.scene,...SCENE_ITEMS.map(i=>sc[i.code]),d.timestamp].map(csvCell).join(','));
+    }));
+    download('waterfront_long.csv',rows.join('\n'),'text/csv');
+    toast('已导出长表 CSV');
+  } else {
+    const head=['name','age','water_exp','major'];
+    const maxS=Math.max(...arr.map(d=>d.scenes.length));
+    for(let s=1;s<=maxS;s++) SCENE_ITEMS.forEach(i=>head.push(`s${s}_${i.code}`));
+    PART2_ITEMS.forEach(i=>head.push(i.code));
+    head.push('timestamp');
+    rows.push(head.map(csvCell).join(','));
+    arr.forEach(d=>{
+      const r=[d.name,d.age,d.water_exp,d.major];
+      for(let s=1;s<=maxS;s++){ const sc=d.scenes[s-1]||{}; SCENE_ITEMS.forEach(i=>r.push(sc[i.code]!==undefined?sc[i.code]:'')); }
+      PART2_ITEMS.forEach(i=>r.push(d.part2[i.code]||''));
+      r.push(d.timestamp);
+      rows.push(r.map(csvCell).join(','));
+    });
+    download('waterfront_wide.csv',rows.join('\n'),'text/csv');
+    toast('已导出宽表 CSV');
+  }
+}
+
+/* ===================== 数据 + 图片 打包导出（ZIP）===================== */
+/* 纯前端最小 ZIP（store 存储，无需联网），自动包含：
+   图片/ 文件夹 + 图片对照表.csv + 图片对照表.html + 评价数据_宽表.csv */
+const _crcTable=(()=>{const t=[];for(let n=0;n<256;n++){let c=n;for(let k=0;k<8;k++)c=c&1?(0xEDB88320^(c>>>1)):(c>>>1);t[n]=c>>>0;}return t;})();
+function _crc32(bytes){let crc=0xFFFFFFFF;for(let i=0;i<bytes.length;i++)crc=(crc>>>8)^_crcTable[(crc^bytes[i])&0xFF];return (crc^0xFFFFFFFF)>>>0;}
+function _cat(arrs){let len=0;arrs.forEach(a=>len+=a.length);const o=new Uint8Array(len);let p=0;arrs.forEach(a=>{o.set(a,p);p+=a.length;});return o;}
+const _u16=n=>new Uint8Array([n&255,(n>>8)&255]);
+const _u32=n=>new Uint8Array([n&255,(n>>8)&255,(n>>16)&255,(n>>24)&255]);
+function makeZip(files){              // files:[{name,data:Uint8Array}]
+  const enc=new TextEncoder();const chunks=[],central=[];let offset=0;
+  files.forEach(f=>{
+    const nb=enc.encode(f.name), crc=_crc32(f.data), sz=f.data.length;
+    const lh=_cat([_u32(0x04034b50),_u16(20),_u16(0x0800),_u16(0),_u16(0),_u16(0),_u32(crc),_u32(sz),_u32(sz),_u16(nb.length),_u16(0)]);
+    chunks.push(lh,nb,f.data);
+    central.push(_cat([_u32(0x02014b50),_u16(20),_u16(20),_u16(0x0800),_u16(0),_u16(0),_u16(0),_u32(crc),_u32(sz),_u32(sz),_u16(nb.length),_u16(0),_u16(0),_u16(0),_u16(0),_u32(0),_u32(offset)]),nb);
+    offset+=lh.length+nb.length+sz;
+  });
+  let cdSize=0;central.forEach(c=>cdSize+=c.length);
+  const end=_cat([_u32(0x06054b50),_u16(0),_u16(0),_u16(files.length),_u16(files.length),_u32(cdSize),_u32(offset),_u16(0)]);
+  return new Blob([...chunks,...central,end],{type:'application/zip'});
+}
+function dataURLtoBytes(d){
+  const c=d.indexOf(','), head=d.slice(0,c), bin=atob(d.slice(c+1));
+  const b=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)b[i]=bin.charCodeAt(i);
+  const mime=(head.match(/data:(.*?);/)||[])[1]||'image/jpeg';
+  const ext=mime.includes('png')?'png':mime.includes('webp')?'webp':'jpg';
+  return {bytes:b,ext};
+}
+function downloadBlob(name,blob){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();URL.revokeObjectURL(a.href);}
+
+function exportWithImages(){
+  const rec=collect();
+  if(!rec.name){ toast('请先填写被试姓名',true); document.getElementById('pname').focus(); return; }
+  const enc=new TextEncoder();
+  const safe=rec.name.replace(/[\\\/:*?"<>|]/g,'_');
+  const files=[];
+  const hasAnyPhoto=scenePhotos.some(p=>p);
+  if(!hasAnyPhoto){ toast('当前问卷没有照片可导出',true); return; }
+
+  const fmtT=m=>{ if(!m||!m.time||m.timeSrc==='order') return ''; const d=new Date(m.time); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}:${String(d.getSeconds()).padStart(2,'0')}`; };
+  const idxHead=['name','scene',...SCENE_ITEMS.map(i=>i.code),'photo','拍摄时间','经纬度'];
+  const idxRows=[idxHead];
+  const htmlRows=[];
+  rec.scenes.forEach((sc,si)=>{
+    const p=scenePhotos[si]||'';
+    const meta=sceneMeta[si]||null;
+    let fname='', thumb='';
+    if(p){
+      const {bytes,ext}=dataURLtoBytes(p);
+      fname=`${safe}_${sc.scene}.${ext}`;
+      files.push({name:'图片/'+fname,data:bytes});
+      const cap=[fmtT(meta),(meta&&meta.coords)||''].filter(Boolean).join(' / ');
+      thumb=`<img src="${p}" style="max-width:260px;max-height:180px;border-radius:6px;display:block">`+(cap?`<div style="font-size:11px;color:#3a565a;margin-top:3px">${cap}</div>`:'');
+    }
+    idxRows.push([rec.name,sc.scene,...SCENE_ITEMS.map(i=>sc[i.code]),fname,fmtT(meta),(meta&&meta.coords)||'']);
+    htmlRows.push(`<tr><td><b>${sc.scene}</b></td><td>${thumb||'—'}</td>`
+      +SCENE_ITEMS.map(i=>`<td style="text-align:center">${sc[i.code]||''}</td>`).join('')+`</tr>`);
+  });
+
+  // 2) 图片对照表.csv（与图片文件名对应）
+  files.push({name:'图片对照表.csv',data:enc.encode('\ufeff'+idxRows.map(r=>r.map(csvCell).join(',')).join('\n'))});
+
+  // 3) 图片对照表.html（可视化：照片与评分并排）
+  const th='<th>'+['场景','照片',...SCENE_ITEMS.map(i=>i.code+'<br><span style=font-weight:400;font-size:11px>'+i.name+'</span>')].join('</th><th>')+'</th>';
+  const p2tbl=PART2_ITEMS.map(i=>`<tr><td>${i.code}</td><td>${i.name}</td><td style="text-align:center">${rec.part2[i.code]||''}</td></tr>`).join('');
+  const html=`<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><title>图片对照表 · ${rec.name}</title>
+  <style>body{font-family:system-ui,'Microsoft YaHei',sans-serif;color:#0b3338;background:#f5f2ea;padding:24px;line-height:1.5}
+  h1{font-size:22px;margin-bottom:4px}.meta{color:#3a565a;font-size:14px;margin-bottom:18px}
+  table{border-collapse:collapse;background:#fff;font-size:13px;box-shadow:0 6px 20px rgba(11,51,56,.08);border-radius:10px;overflow:hidden;margin-bottom:24px}
+  th,td{border:1px solid #d8e6e4;padding:8px 10px;vertical-align:middle}th{background:#0f6e72;color:#fff;font-weight:600;font-size:12px}
+  td img{background:#000}h2{font-size:16px;margin:8px 0}</style></head><body>
+  <h1>水景视觉评价 · 图片对照表</h1>
+  <div class="meta">被试：${rec.name}　年龄：${rec.age||'—'}　亲水经历：${rec.water_exp||'—'}　专业背景：${rec.major||'—'}　时间：${rec.timestamp}</div>
+  <table><thead><tr>${th}</tr></thead><tbody>${htmlRows.join('')}</tbody></table>
+  <h2>整体水景视觉评价</h2>
+  <table><thead><tr><th>代码</th><th>指标</th><th>评分</th></tr></thead><tbody>${p2tbl}</tbody></table>
+  </body></html>`;
+  files.push({name:'图片对照表.html',data:enc.encode(html)});
+
+  // 4) 评价数据_宽表.csv（含整体评价，便于分析）
+  const wHead=['name','age','water_exp','major'];
+  rec.scenes.forEach((sc,si)=>SCENE_ITEMS.forEach(i=>wHead.push('s'+(si+1)+'_'+i.code)));
+  PART2_ITEMS.forEach(i=>wHead.push(i.code)); wHead.push('timestamp');
+  const wRow=[rec.name,rec.age,rec.water_exp,rec.major];
+  rec.scenes.forEach(sc=>SCENE_ITEMS.forEach(i=>wRow.push(sc[i.code]||'')));
+  PART2_ITEMS.forEach(i=>wRow.push(rec.part2[i.code]||'')); wRow.push(rec.timestamp);
+  files.push({name:'评价数据_宽表.csv',data:enc.encode('\ufeff'+[wHead.map(csvCell).join(','),wRow.map(csvCell).join(',')].join('\n'))});
+
+  // 5) 打包
+  const blob=makeZip(files);
+  downloadBlob(safe+'_数据与图片.zip',blob);
+  toast('已导出 ZIP：图片 '+files.filter(f=>f.name.startsWith('图片/')).length+' 张 + 对照表 + 数据表');
+}
+
+/* ===================== 保存独立专属网页（核心固化提取）===================== */
+function exportWebpage(){
+  const name=(document.getElementById('snameSetup').value.trim()||document.getElementById('pname').value.trim());
+  const cfg={ name:name, scenes:[] };
+  for(let s=1;s<=NUM_SCENES;s++) {
+    cfg.scenes.push({ label:pad(s), photo: scenePhotos[s-1]||'', meta: sceneMeta[s-1]||null });
+  }
+  const cfgScript='<script>window.__CONFIG__='+JSON.stringify(cfg)+';<\/script>\n';
+  const out=PRISTINE_HTML.replace('</head>', cfgScript+'</head>');
+  const fname='水岸问卷'+(name?'_'+name:'')+'.html';
+  download(fname,out,'text/html');
+  toast('已导出独立问卷：'+fname);
+}
+
+/* ===================== 状态初始化与切换 ===================== */
+let MODE='editor'; 
+function applyModeVisibility(){
+  const editor=(MODE==='editor');
+  document.querySelectorAll('.editor-only').forEach(el=>el.style.display=editor?'':'none');
+}
+
+function initMode(){
+  const cfg=window.__CONFIG__;
+  if(cfg){
+    MODE='fill';
+    document.getElementById('setupPanel').classList.add('hidden');     
+    document.getElementById('modeTag').textContent='被试填写模式';
+    document.getElementById('modeTag').className='mode-tag mode-fill';
+    
+    // 单张照片模式（当前）或向下兼容旧双图模式
+    if(cfg.scenes) {
+      NUM_SCENES=cfg.scenes.length;
+      scenePhotos=cfg.scenes.map(s=>s.photo || '');
+      sceneMeta=cfg.scenes.map(s=>s.meta || null);
+    } else if(cfg.dualScenes) {
+      NUM_SCENES=cfg.dualScenes.length;
+      scenePhotos=cfg.dualScenes.map(s=>(s.photos||[])[0]||'');
+      sceneMeta=cfg.dualScenes.map(s=>s.meta?(Array.isArray(s.meta)?s.meta[0]:s.meta):null);
+    }
+    if(cfg.name) document.getElementById('pname').value=cfg.name;
+  } else {
+    MODE='editor';
+    document.getElementById('modeTag').textContent='研究者 · 自动化编辑模式';
+    document.getElementById('modeTag').className='mode-tag mode-editor';
+    NUM_SCENES=5;
+    scenePhotos=['','','','',''];
+    sceneMeta=[];
+  }
+}
+
+let tT;
+function toast(msg,warn){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.className='show'+(warn?' warn':'');
+  clearTimeout(tT); tT=setTimeout(()=>t.className='',2200);
+}
+
+initMode();
+buildScenes();
+buildPart2();
+updateProgress();
+</script>
+</body>
+</html>

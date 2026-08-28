@@ -1,132 +1,50 @@
 /* eslint-disable react/jsx-props-no-spreading */
-/* eslint-disable no-nested-ternary */
-
 import CustomHead from '@src/components/dom/CustomHead';
 import Image from 'next/image';
 import Link from 'next/link';
 import clsx from 'clsx';
-import { gsap } from 'gsap';
 import projects from '@src/constants/projects';
 import styles from '@src/pages/projects/projects.module.scss';
-import useIsMobile from '@src/hooks/useIsMobile';
-import { useIsomorphicLayoutEffect } from '@src/hooks/useIsomorphicLayoutEffect';
-import { useRef } from 'react';
-import { useShallow } from 'zustand/react/shallow';
-import { useStore } from '@src/store';
-import { useWindowSize } from '@darkroom.engineering/hamo';
 
 const seo = {
-  title: 'Giats - Projects',
-  description: 'Explore my portfolio to see a range of frontend projects, from responsive websites to web applications. Discover my work with React, Nextjs, React three fiber, Electron and more.',
-  keywords: [
-    'Giats Projects',
-    'Portfolio Showcase',
-    'Frontend Development Examples',
-    'Web Design Portfolio',
-    'Responsive Web Projects',
-    'Web Applications Portfolio',
-    'HTML and CSS Projects',
-    'JavaScript Development',
-    'React Work',
-    'Next.js Projects',
-    'React Three Fiber Projects',
-    'Electron Projects',
-    'Professional Web Development',
-    'Evangelos Giatsidis Projects',
-  ],
+  title: '项目｜赵庆卓 AI 产品经理作品集',
+  description: '赵庆卓的产品项目：衣橱决策、空间数据与科研流程自动化。',
+  keywords: ['赵庆卓', 'AI 产品经理', '产品项目', '作品集'],
 };
 
 function Page() {
-  const isMobile = useIsMobile();
-
-  const windowSize = useWindowSize();
-  const rootRef = useRef();
-  const projectRefs = useRef([]);
-  const [isLoading] = useStore(useShallow((state) => [state.isLoading]));
-
-  const setupProjectAnimations = () => {
-    const ctx = gsap.context(() => {
-      if (!isLoading) {
-        projectRefs.current.slice(0, -1).forEach((projectRef, index) => {
-          gsap.set(projectRef, { yPercent: 0 });
-          gsap
-            .timeline({
-              scrollTrigger: {
-                id: `projectRef-${index}`,
-                trigger: rootRef.current,
-                start: `top+=${windowSize.height * index}`,
-                end: () => `+=${(projectRefs.current.length - 2) * windowSize.height}`,
-                scrub: true,
-                scroller: document?.querySelector('main'),
-                invalidateOnRefresh: true,
-              },
-            })
-            .to(projectRef, {
-              yPercent: 100,
-              stagger: 1,
-            });
-        });
-      }
-    });
-
-    return ctx;
-  };
-
-  useIsomorphicLayoutEffect(() => {
-    const ctx = setupProjectAnimations();
-    return () => ctx.kill();
-  }, [isLoading, windowSize.height]);
-
   return (
     <>
       <CustomHead {...seo} />
-      <section className={clsx(styles.titleContainer, 'layout-block-inner')}>
-        <h1 className={clsx(styles.title, 'h1')}>All Projects</h1>
-      </section>
-      <section ref={rootRef} className={clsx(styles.root, 'layout-block-inner')}>
-        <div className={styles.innerContainer}>
-          {projects.map((project, index) => (
-            <Link aria-label={`Go ${project.title}`} id={project.id} key={project.id} scroll={false} href={project.link} className={clsx(styles.card)}>
-              <div
-                style={
-                  !isMobile
-                    ? {
-                        height: index === projects.length - 1 ? '200svh' : `${200 + 100 * index}svh`,
-                        top: index === 0 ? '0px' : '-100svh',
-                      }
-                    : {
-                        height: index === projects.length - 1 ? '100svh' : `${200 + 100 * index}svh`,
-                        top: index === 0 ? '0px' : '-50svh',
-                      }
-                }
-                className={styles.projectsWrap}
-              >
-                <div className={clsx(styles.container, 'layout-grid-inner')}>
-                  <div className={styles.projectsDetails}>
-                    <h6 className={clsx(styles.text, 'h6')}>{project.date}</h6>
-                    <h3 className={clsx(styles.text, 'h3')}>{project.title}</h3>
-                  </div>
-                  <div className={styles.imageContainer}>
-                    <Image priority={index === 0} sizes="100%" src={project.img} fill alt={project.title} />
-                  </div>
-                </div>
+      <section className={clsx(styles.root, 'layout-grid-inner')}>
+        <div className={styles.eyebrow}>ALL PROJECTS / 2026</div>
+        <h1>项目经历</h1>
+        <p className={styles.intro}>3 个已完成项目，覆盖 AI 消费决策、空间数据工作流与科研问卷工具。</p>
+        <div className={styles.projectGrid}>
+          {projects.map((project) => (
+            <article key={project.id} className={styles.card}>
+              <div className={styles.cardTop}>
+                <span>{project.index}</span>
+                <span>{project.type}</span>
+                <span>{project.date}</span>
               </div>
-              <div
-                ref={(el) => {
-                  projectRefs.current[index] = el;
-                }}
-                className={styles.canvas}
-              >
-                <Image
-                  priority={index === 0}
-                  sizes="100%"
-                  className={index === 0 ? styles.firstCard : index === projects.length - 1 ? styles.lastCard : undefined}
-                  src={project.img}
-                  fill
-                  alt={project.title}
-                />
+              <Link href={project.link} scroll={false} className={styles.art}>
+                <Image src={project.cover} fill sizes="(max-width: 700px) 94vw, 46vw" alt={project.title} />
+              </Link>
+              <Link href={project.link} scroll={false}>
+                <h2>{project.title}</h2>
+              </Link>
+              <p>{project.summary}</p>
+              <strong>{project.outcome}</strong>
+              <div className={styles.actions}>
+                <a href={project.liveLink} target="_blank" rel="noreferrer">
+                  体验项目 ↗
+                </a>
+                <Link href={project.link} scroll={false}>
+                  查看案例 →
+                </Link>
               </div>
-            </Link>
+            </article>
           ))}
         </div>
       </section>

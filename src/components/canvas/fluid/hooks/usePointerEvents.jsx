@@ -40,7 +40,9 @@ const usePointerEvents = (mainRef, size, force) => {
       });
     };
 
-    element.addEventListener('pointermove', handlePointerMove, { passive: true });
+    element.addEventListener('pointermove', handlePointerMove, {
+      passive: true,
+    });
 
     return () => {
       element.removeEventListener('pointermove', handlePointerMove);

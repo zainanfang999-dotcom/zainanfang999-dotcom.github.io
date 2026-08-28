@@ -32,16 +32,18 @@ function Background() {
   const uniforms = useMemo(
     () => ({
       uTime: { value: 0 },
-      uColor1: { value: [63 / 255, 63 / 255, 63 / 255] },
-      uColor2: { value: [38 / 255, 38 / 255, 38 / 255] },
-      uColor3: { value: [9 / 255, 5 / 255, 12 / 255] },
-      uColorAccent: { value: new THREE.Color(20.0, 20.0, 20.0) },
+      uColor1: { value: [12 / 255, 12 / 255, 12 / 255] },
+      uColor2: { value: [48 / 255, 48 / 255, 48 / 255] },
+      uColor3: { value: [219 / 255, 219 / 255, 214 / 255] },
+      uColorAccent: { value: new THREE.Color('#0f9f86') },
       uLinesBlur: { value: 0.49 },
       uNoise: { value: 0.02 },
       uOffsetX: { value: 0.34 },
       uOffsetY: { value: 0.0 },
       uLinesAmount: { value: 5.0 },
-      uPlaneRes: { value: new THREE.Vector2(windowSize.width, windowSize.height) },
+      uPlaneRes: {
+        value: new THREE.Vector2(windowSize.width, windowSize.height),
+      },
       uMouse2D: { value: new THREE.Vector2(1.0, 1.0) },
       uBackgroundScale: { value: 3.0 },
     }),

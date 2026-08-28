@@ -10,7 +10,7 @@ export const useStore = create((set) => ({
   setIsMenuOpen: (isMenuOpen) => set({ isMenuOpen }),
   isLoading: true,
   setIsLoading: (isLoading) => set({ isLoading }),
-  fluidColor: '#d7d7d4',
+  fluidColor: '#55d4ba',
   setFluidColor: (fluidColor) => set({ fluidColor }),
   isAbout: false,
   setIsAbout: (isAbout) => set({ isAbout }),

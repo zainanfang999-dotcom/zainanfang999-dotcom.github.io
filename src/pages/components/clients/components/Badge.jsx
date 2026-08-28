@@ -24,7 +24,14 @@ export default function Badge({ name }) {
       ref={(node) => {
         el.current = node;
       }}
-      style={{ position: 'relative', display: 'block', backgroundColor: 'transparent', borderRadius: '1.3888888889vw', height: '100%', width: '100%' }}
+      style={{
+        position: 'relative',
+        display: 'block',
+        backgroundColor: 'transparent',
+        borderRadius: '1.3888888889vw',
+        height: '100%',
+        width: '100%',
+      }}
     >
       <PerspectiveCamera makeDefault position={[0, 0, 10]} fov={25} />
       <ambientLight intensity={Math.PI} />
@@ -32,7 +39,6 @@ export default function Badge({ name }) {
         <Band name={name} intersected={intersection?.isIntersecting} />
       </Physics>
       <ambientLight intensity={1.3} />
-
 
       <directionalLight
         position={[5, 5, 5]}
@@ -47,9 +53,7 @@ export default function Badge({ name }) {
         shadow-camera-bottom={-10}
       />
 
-
       <directionalLight position={[-5, 5, 5]} intensity={1} />
-
 
       <directionalLight position={[0, 5, -5]} intensity={2} />
     </View>
@@ -65,7 +69,13 @@ function Band({ maxSpeed = 50, minSpeed = 10, name, intersected }) {
   const card = useRef();
   const ang = new THREE.Vector3();
   const rot = new THREE.Vector3();
-  const segmentProps = { type: 'dynamic', canSleep: true, colliders: false, angularDamping: 2, linearDamping: 2 };
+  const segmentProps = {
+    type: 'dynamic',
+    canSleep: true,
+    colliders: false,
+    angularDamping: 2,
+    linearDamping: 2,
+  };
   const { nodes, materials } = useGLTF(`/model/Tag.glb`);
 
   const texture = useTexture(`/model/Band${name}.png`);
@@ -80,7 +90,10 @@ function Band({ maxSpeed = 50, minSpeed = 10, name, intersected }) {
   useRopeJoint(fixed, j1, [[0, 0, 0], [0, 0, 0], 1]);
   useRopeJoint(j1, j2, [[0, 0, 0], [0, 0, 0], 1]);
   useRopeJoint(j2, j3, [[0, 0, 0], [0, 0, 0], 1]);
-  useSphericalJoint(j3, card, [[0, 0, 0], [0, 1.45, 0]]);
+  useSphericalJoint(j3, card, [
+    [0, 0, 0],
+    [0, 1.45, 0],
+  ]);
 
   useScroll(({ direction, isScrolling: useScrolling, velocity }) => {
     scrollDirection.current = direction;
@@ -95,7 +108,7 @@ function Band({ maxSpeed = 50, minSpeed = 10, name, intersected }) {
       card.current.applyImpulse({ x: directionVector * moveDistance, y: 0, z: 0 }, true);
     }
     if (fixed.current) {
-       [j1, j2].forEach((ref) => {
+      [j1, j2].forEach((ref) => {
         if (!ref.current.lerped) ref.current.lerped = new THREE.Vector3().copy(ref.current.translation());
         const clampedDistance = Math.max(0.1, Math.min(1, ref.current.lerped.distanceTo(ref.current.translation())));
         ref.current.lerped.lerp(ref.current.translation(), delta * (minSpeed + clampedDistance * (maxSpeed - minSpeed)));
@@ -147,7 +160,7 @@ function Band({ maxSpeed = 50, minSpeed = 10, name, intersected }) {
       </group>
       <mesh ref={band}>
         <meshLineGeometry />
-        <meshLineMaterial color="white" resolution={[1, 1]}  depthTest={false} useMap map={texture} repeat={[-3, 1]} lineWidth={1} />
+        <meshLineMaterial color="white" resolution={[1, 1]} depthTest={false} useMap map={texture} repeat={[-3, 1]} lineWidth={1} />
       </mesh>
     </>
   );
