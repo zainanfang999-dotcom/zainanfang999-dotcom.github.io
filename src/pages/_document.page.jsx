@@ -1,9 +1,19 @@
 import Document, { Head, Html, Main, NextScript } from 'next/document';
 
 export default class MyDocument extends Document {
+  static async getInitialProps(ctx) {
+    const initialProps = await Document.getInitialProps(ctx);
+    return {
+      ...initialProps,
+      language: ctx.pathname === '/en' || ctx.pathname.startsWith('/en/') ? 'en' : 'zh-CN',
+    };
+  }
+
   render() {
+    const { language } = this.props;
+
     return (
-      <Html lang="en">
+      <Html lang={language}>
         <Head>
           <link href="/fonts/NeueHaasDisplayBold.woff2" as="font" type="font/woff2" />
           <link href="/fonts/NeueHaasDisplayLight.woff2" as="font" type="font/woff2" />

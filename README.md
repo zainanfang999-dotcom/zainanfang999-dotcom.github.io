@@ -2,6 +2,11 @@
 
 赵庆卓的个人作品集网站，展示已完成的 AI 产品、空间数据工具、科研流程自动化项目，以及个人建筑设计与水彩作品。
 
+- 中文版：<https://zainanfang999-dotcom.github.io/>
+- English version: <https://zainanfang999-dotcom.github.io/en/>
+
+网站支持中英文双语浏览，并会在对应页面之间保持上下文切换。
+
 ## 项目内容
 
 - Wardrobe Wise：AI 衣橱与消费决策产品

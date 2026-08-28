@@ -79,7 +79,8 @@ const performMoves = (rectangles, gridWidth, gridHeight) => {
   return allMovements;
 };
 
-function Home() {
+function Home({ language = 'zh' }) {
+  const isEnglish = language === 'en';
   const isMobile = useIsMobile();
   const [timeline, setTimeline] = useState(null);
   const rootRef = useRef();
@@ -225,11 +226,21 @@ function Home() {
           <p className={styles.identity}>ZHAO QINGZHUO · AI PRODUCT MANAGER</p>
           <p className={styles.location}>NANJING / CHINA · PORTFOLIO 2026</p>
         </div>
-        {!isMobile && <p className={styles.rightContainer}>东南大学建筑学硕士 · AI 产品 / 用户研究 / 原型设计</p>}
+        {!isMobile && (
+          <p className={styles.rightContainer}>{isEnglish ? 'M.ARCH, SOUTHEAST UNIVERSITY · AI PRODUCTS / USER RESEARCH / PROTOTYPING' : '东南大学建筑学硕士 · AI 产品 / 用户研究 / 原型设计'}</p>
+        )}
       </div>
 
       <div className={styles.bottomContainer}>
-        <Image priority className={styles.artworkBackdrop} src="/garden-landscape-hero.png" alt="赵庆卓园林设计作品：青绿山水与江南园林长卷" fill sizes="(max-width: 700px) 92vw, 94vw" quality={86} />
+        <Image
+          priority
+          className={styles.artworkBackdrop}
+          src="/garden-landscape-hero.png"
+          alt={isEnglish ? 'Original landscape design by Zhao Qingzhuo: a blue-green Jiangnan garden scroll' : '赵庆卓园林设计作品：青绿山水与江南园林长卷'}
+          fill
+          sizes="(max-width: 700px) 92vw, 94vw"
+          quality={86}
+        />
         <div onMouseEnter={onMouseEnter} onMouseLeave={onMouseLeave} className={styles.svgWrapper}>
           <svg ref={svgRef} width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none">
             <rect x="0" y="0" className={styles.mask2} width="100%" height="100.3%" />
@@ -243,7 +254,7 @@ function Home() {
       </div>
       {isMobile && (
         <div className={styles.rightContainerMobile}>
-          <p>东南大学建筑学硕士 · AI 产品 / 用户研究 / 原型设计</p>
+          <p>{isEnglish ? 'M.ARCH, SOUTHEAST UNIVERSITY · AI PRODUCTS / USER RESEARCH / PROTOTYPING' : '东南大学建筑学硕士 · AI 产品 / 用户研究 / 原型设计'}</p>
         </div>
       )}
 

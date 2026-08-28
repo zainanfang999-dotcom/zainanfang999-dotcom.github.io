@@ -31,6 +31,35 @@
       display: flex;
       gap: var(--layout-columns-gap);
       align-items: center;
+
+      .languageSwitch {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 2.35vw;
+        height: 2.35vw;
+        padding: 0 0.55vw;
+        border: 1px solid currentColor;
+        border-radius: 999px;
+        font-size: 0.72vw;
+        line-height: 1;
+        letter-spacing: 0.04em;
+        transition:
+          color 0.25s ease,
+          background-color 0.25s ease;
+
+        &:hover {
+          color: var(--white);
+          background: var(--black);
+        }
+
+        @include mobile {
+          min-width: 8vw;
+          height: 8vw;
+          padding: 0 2vw;
+          font-size: 2.6vw;
+        }
+      }
     }
   }
 }

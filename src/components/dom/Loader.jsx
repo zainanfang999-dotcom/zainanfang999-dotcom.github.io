@@ -20,7 +20,7 @@ function Loader() {
   useIsomorphicLayoutEffect(() => {
     let ctx;
     if (!introOut) {
-      setIsAbout(router.asPath === '/about');
+      setIsAbout(router.pathname === '/about' || router.pathname === '/en/about');
 
       ctx = gsap.context(() => {
         gsap.to(progressRef.current, {

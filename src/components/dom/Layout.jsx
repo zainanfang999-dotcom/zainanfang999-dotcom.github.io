@@ -27,7 +27,7 @@ function Layout({ children, layoutRef, mainRef, router }) {
 
         const tl = gsap.timeline({
           onComplete: () => {
-            setIsAbout(router.asPath === '/about');
+            setIsAbout(router.pathname === '/about' || router.pathname === '/en/about');
             setIsLoading(false);
             lenis.start();
           },
@@ -43,7 +43,7 @@ function Layout({ children, layoutRef, mainRef, router }) {
             height: '90%',
             opacity: 1,
             onComplete: () => {
-              setIsAbout(router.asPath === '/about');
+              setIsAbout(router.pathname === '/about' || router.pathname === '/en/about');
               setIsEntering(false);
             },
           },

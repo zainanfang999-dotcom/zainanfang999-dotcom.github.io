@@ -6,7 +6,7 @@ import clsx from 'clsx';
 import dynamic from 'next/dynamic';
 import footerLinks from '@src/components/dom/navbar/constants/footerLinks';
 import gsap from 'gsap';
-import menuLinks from '@src/components/dom/navbar/constants/menuLinks';
+import menuLinksZh, { menuLinksEn } from '@src/components/dom/navbar/constants/menuLinks';
 import styles from '@src/components/dom/styles/footer.module.scss';
 import useIsMobile from '@src/hooks/useIsMobile';
 import { useIsomorphicLayoutEffect } from '@src/hooks/useIsomorphicLayoutEffect';
@@ -14,6 +14,8 @@ import { useRef } from 'react';
 import { useShallow } from 'zustand/react/shallow';
 import { useStore } from '@src/store';
 import { useWindowSize } from '@darkroom.engineering/hamo';
+import { useRouter } from 'next/router';
+import { isEnglishPath } from '@src/utils/locale';
 
 const GoTop = dynamic(() => import('@src/components/dom/GoTop'), {
   ssr: false,
@@ -24,6 +26,9 @@ function Footer() {
   const footerRef = useRef();
   const [isLoading] = useStore(useShallow((state) => [state.isLoading]));
   const windowSize = useWindowSize();
+  const router = useRouter();
+  const isEnglish = isEnglishPath(router.asPath);
+  const menuLinks = isEnglish ? menuLinksEn : menuLinksZh;
 
   useIsomorphicLayoutEffect(() => {
     if (!isLoading) {
@@ -51,7 +56,7 @@ function Footer() {
     <section ref={footerRef} className={clsx(styles.root, 'layout-grid-inner')} role="contentinfo">
       <div style={{ gridColumn: isMobile ? '1 / 3' : '1 / 5' }} className={styles.linksContainer}>
         <AppearTitle isFooter>
-          <h6 className={clsx(styles.title, 'h6')}>导航</h6>
+          <h6 className={clsx(styles.title, 'h6')}>{isEnglish ? 'NAVIGATION' : '导航'}</h6>
           {menuLinks.slice(0, -1).map((link) => (
             <div key={link.title} className={styles.linkTextContainer}>
               <LinkText className={styles.linkText} title={link.title} href={link.href}>
@@ -63,7 +68,7 @@ function Footer() {
       </div>
       <div style={{ gridColumn: isMobile ? '3 / 7' : '5 / 9' }} className={styles.linksContainer}>
         <AppearTitle isFooter>
-          <h6 className={clsx(styles.title, 'h6')}>链接</h6>
+          <h6 className={clsx(styles.title, 'h6')}>{isEnglish ? 'LINKS' : '链接'}</h6>
           {footerLinks.map((link) => (
             <div key={link.title} className={styles.linkTextContainer}>
               <LinkText target className={styles.linkText} title={link.title} href={link.href}>
@@ -75,7 +80,7 @@ function Footer() {
       </div>
       <div className={styles.emailContaineer}>
         <AppearTitle isFooter>
-          <h4 className={clsx(styles.workWithMe, 'h4')}>保持联系：</h4>
+          <h4 className={clsx(styles.workWithMe, 'h4')}>{isEnglish ? 'LET’S KEEP IN TOUCH:' : '保持联系：'}</h4>
           <div className={styles.link}>
             <Link aria-label="发送邮件" href="mailto:zai_nanfang@163.com">
               <h4 className={clsx(styles.email, 'h4')}>zai_nanfang@163.com</h4>
@@ -92,7 +97,7 @@ function Footer() {
       <div className={styles.middleContainer} style={{ gridColumn: '9 / 13' }}>
         <AppearTitle isFooter>
           <div className="p-x">Open to opportunities</div>
-          <div className={clsx('p-x', styles.middleText)}>产品 / AI 产品 / 用户研究</div>
+          <div className={clsx('p-x', styles.middleText)}>{isEnglish ? 'Product / AI Products / User Research' : '产品 / AI 产品 / 用户研究'}</div>
         </AppearTitle>
       </div>
       <div
@@ -103,7 +108,7 @@ function Footer() {
         }}
       >
         <AppearTitle isFooter>
-          <div className="p-x">© 2026 · 赵庆卓</div>
+          <div className="p-x">© 2026 · {isEnglish ? 'Zhao Qingzhuo' : '赵庆卓'}</div>
           <div className={clsx('p-x', styles.middleText)}>Original framework: Evangelos Giatsidis</div>
         </AppearTitle>
       </div>

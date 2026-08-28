@@ -4,12 +4,13 @@ import Link from 'next/link';
 import clsx from 'clsx';
 import footerLinks from '@src/components/dom/navbar/constants/footerLinks';
 import gsap from 'gsap';
-import menuLinks from '@src/components/dom/navbar/constants/menuLinks';
-import projectsLinks from '@src/components/dom/navbar/constants/projectsLinks';
+import menuLinksZh, { menuLinksEn } from '@src/components/dom/navbar/constants/menuLinks';
+import projectsLinksZh, { projectsLinksEn } from '@src/components/dom/navbar/constants/projectsLinks';
 import styles from '@src/components/dom/navbar/styles/menuLinks.module.scss';
 import useIsMobile from '@src/hooks/useIsMobile';
 import { useRouter } from 'next/router';
 import { useStore } from '@src/store';
+import { getLanguagePath, isEnglishPath } from '@src/utils/locale';
 
 function MenuLinks() {
   const timeline = useRef(
@@ -23,6 +24,10 @@ function MenuLinks() {
   const menuRef = useRef();
   const menuLinksItemsRef = useRef([]);
   const router = useRouter();
+  const isEnglish = isEnglishPath(router.asPath);
+  const menuLinks = isEnglish ? menuLinksEn : menuLinksZh;
+  const projectsLinks = isEnglish ? projectsLinksEn : projectsLinksZh;
+  const languageHref = getLanguagePath(router.asPath, isEnglish ? 'zh' : 'en');
 
   const setupMenuAnimation = (gsapTimeline, refs) => {
     const fluidCanvas = document?.getElementById('fluidCanvas');
@@ -182,7 +187,12 @@ function MenuLinks() {
             className={styles.menuListItem}
           >
             <Link aria-label="发送邮件" scroll={false} href="mailto:zai_nanfang@163.com">
-              <span>联系我 / CONTACT</span>
+              <span>{isEnglish ? 'CONTACT' : '联系我 / CONTACT'}</span>
+            </Link>
+          </div>
+          <div className={styles.menuListItem}>
+            <Link aria-label={isEnglish ? '切换至中文版' : 'Switch to English'} scroll={false} href={languageHref}>
+              <span>{isEnglish ? '中文版 / CHINESE' : 'ENGLISH VERSION / EN'}</span>
             </Link>
           </div>
         </div>

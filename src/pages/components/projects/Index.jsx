@@ -4,21 +4,29 @@ import Image from 'next/image';
 import Link from 'next/link';
 import clsx from 'clsx';
 import projects from '@src/constants/projects';
+import { localizeProject } from '@src/utils/locale';
 import styles from '@src/pages/components/projects/styles/projects.module.scss';
 
-function Projects() {
+function Projects({ language = 'zh' }) {
+  const isEnglish = language === 'en';
+  const localizedProjects = projects.map((project) => localizeProject(project, language));
+
   return (
     <>
       <section id="projects" className={clsx(styles.titleContainer, 'layout-grid-inner')}>
         <div className={styles.sectionNo}>02 / SELECTED WORK</div>
         <h1 className={styles.title}>
-          <AppearByWords>项目经历</AppearByWords>
+          <AppearByWords>{isEnglish ? 'SELECTED PROJECTS' : '项目经历'}</AppearByWords>
         </h1>
-        <p>3 个已完成项目，包含产品定义、用户研究、工作流设计与可交互原型。</p>
+        <p>
+          {isEnglish
+            ? 'Three completed projects spanning product definition, user research, workflow design and interactive prototyping.'
+            : '3 个已完成项目，包含产品定义、用户研究、工作流设计与可交互原型。'}
+        </p>
       </section>
       <section className={clsx(styles.root, 'layout-block-inner')}>
         <div className={styles.innerContainer}>
-          {projects.map((project) => (
+          {localizedProjects.map((project) => (
             <article id={project.id} key={project.id} className={styles.card}>
               <div className={clsx(styles.container, 'layout-grid-inner')}>
                 <div className={styles.projectDetails}>
@@ -39,10 +47,10 @@ function Projects() {
                   </div>
                   <div className={styles.actions}>
                     <a href={project.liveLink} target="_blank" rel="noreferrer" className={styles.primaryAction}>
-                      体验项目 <b>↗</b>
+                      {isEnglish ? 'TRY THE PRODUCT' : '体验项目'} <b>↗</b>
                     </a>
                     <Link href={project.link} scroll={false} className={styles.secondaryAction}>
-                      查看案例 →
+                      {isEnglish ? 'VIEW CASE STUDY' : '查看案例'} →
                     </Link>
                   </div>
                 </div>
@@ -55,7 +63,7 @@ function Projects() {
           ))}
         </div>
         <div className={styles.buttonContainer}>
-          <ButtonLink href="/projects" label="全部项目 / ALL PROJECTS" />
+          <ButtonLink href={isEnglish ? '/en/projects' : '/projects'} label={isEnglish ? 'VIEW ALL PROJECTS' : '全部项目 / ALL PROJECTS'} />
         </div>
       </section>
     </>

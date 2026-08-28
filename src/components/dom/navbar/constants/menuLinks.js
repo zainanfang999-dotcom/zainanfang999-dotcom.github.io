@@ -4,4 +4,12 @@ const menuLinks = [
   { title: '全部项目 / Projects', href: '/projects' },
   { title: '联系我 / Contact', href: undefined },
 ];
+
+export const menuLinksEn = [
+  { title: 'Home', href: '/en' },
+  { title: 'Profile', href: '/en/about' },
+  { title: 'All Projects', href: '/en/projects' },
+  { title: 'Contact', href: undefined },
+];
+
 export default menuLinks;
