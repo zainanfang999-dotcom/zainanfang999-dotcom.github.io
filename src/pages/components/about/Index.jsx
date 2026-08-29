@@ -53,12 +53,12 @@ function About({ language = 'zh' }) {
           </div>
           <div className={styles.worksGrid}>
             <figure>
-              <Image src="/art/garden-scroll.jpg" fill sizes="(max-width: 700px) 94vw, 28vw" alt={isEnglish ? 'Original Jiangnan garden scroll by Zhao Qingzhuo' : '赵庆卓原创江南园林绘画长卷'} />
+              <Image src="/art/garden-scroll-web.webp" fill sizes="(max-width: 700px) 94vw, 28vw" alt={isEnglish ? 'Original Jiangnan garden scroll by Zhao Qingzhuo' : '赵庆卓原创江南园林绘画长卷'} />
               <figcaption>{isEnglish ? 'Painting · Jiangnan Garden Scroll' : '绘画 · 江南园林长卷'}</figcaption>
             </figure>
             <figure>
               <Image
-                src="/art/memory-box.jpg"
+                src="/art/memory-box-web.webp"
                 fill
                 sizes="(max-width: 700px) 47vw, 15vw"
                 alt={isEnglish ? 'Original industrial heritage renewal project by Zhao Qingzhuo' : '赵庆卓原创工业遗产建筑设计作品'}
@@ -66,7 +66,12 @@ function About({ language = 'zh' }) {
               <figcaption>{isEnglish ? 'Architecture · Industrial Heritage Renewal' : '建筑 · 工业遗产更新'}</figcaption>
             </figure>
             <figure>
-              <Image src="/art/garden-axon.jpg" fill sizes="(max-width: 700px) 47vw, 15vw" alt={isEnglish ? 'Original garden architecture project by Zhao Qingzhuo' : '赵庆卓原创园林建筑设计作品'} />
+              <Image
+                src="/art/garden-axon-web.webp"
+                fill
+                sizes="(max-width: 700px) 47vw, 15vw"
+                alt={isEnglish ? 'Original garden architecture project by Zhao Qingzhuo' : '赵庆卓原创园林建筑设计作品'}
+              />
               <figcaption>{isEnglish ? 'Architecture · Garden Spatial Design' : '建筑 · 园林空间设计'}</figcaption>
             </figure>
           </div>
@@ -81,7 +86,7 @@ function About({ language = 'zh' }) {
             <p>{isEnglish ? 'Configuration time per research survey' : '场景实验问卷单份配置流程'}</p>
           </article>
           <article>
-            <strong>{isEnglish ? '3 completed projects' : '3 个项目'}</strong>
+            <strong>{isEnglish ? '4 completed projects' : '4 个项目'}</strong>
             <p>{isEnglish ? 'Full case studies available in this portfolio' : '本作品集中可查看的已完成项目'}</p>
           </article>
         </div>

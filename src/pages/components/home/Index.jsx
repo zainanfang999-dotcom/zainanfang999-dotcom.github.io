@@ -235,7 +235,7 @@ function Home({ language = 'zh' }) {
         <Image
           priority
           className={styles.artworkBackdrop}
-          src="/garden-landscape-hero.png"
+          src="/garden-landscape-hero.webp"
           alt={isEnglish ? 'Original landscape design by Zhao Qingzhuo: a blue-green Jiangnan garden scroll' : '赵庆卓园林设计作品：青绿山水与江南园林长卷'}
           fill
           sizes="(max-width: 700px) 92vw, 94vw"

@@ -5,7 +5,7 @@ import '@src/styles/global.css';
 
 import * as THREE from 'three';
 
-import { useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 import { Analytics } from '@vercel/analytics/react';
 import Background from '@src/components/canvas/background/Index';
@@ -50,16 +50,26 @@ function MyApp({ Component, pageProps, router }) {
   const mainRef = useRef();
   const mainContainerRef = useRef();
   const layoutRef = useRef();
+  const [enableFluid, setEnableFluid] = useState(false);
 
   useFoucFix();
   useScroll(() => ScrollTrigger.update());
+
+  useEffect(() => {
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const hasCoarsePointer = window.matchMedia('(pointer: coarse)').matches;
+    const lowCoreCount = navigator.hardwareConcurrency && navigator.hardwareConcurrency < 6;
+    const lowMemory = navigator.deviceMemory && navigator.deviceMemory < 4;
+
+    setEnableFluid(!prefersReducedMotion && !hasCoarsePointer && !lowCoreCount && !lowMemory);
+  }, []);
 
   useIsomorphicLayoutEffect(() => {
     // eslint-disable-next-line no-shadow
     const lenis = new Lenis({
       smoothWheel: true,
-      smoothTouch: true,
-      syncTouch: true,
+      smoothTouch: false,
+      syncTouch: false,
       wrapper: mainRef.current || undefined,
       content: mainContainerRef.current || undefined,
     });
@@ -110,7 +120,7 @@ function MyApp({ Component, pageProps, router }) {
         style={{ zIndex: 0 }}
         resize={{ debounce: { resize: 0, scroll: 0 }, polyfill: undefined }}
         className={styles.canvasContainer}
-        dpr={[0.5, 1.5]}
+        dpr={[0.5, 1]}
       >
         <View.Port />
       </Canvas>
@@ -123,25 +133,27 @@ function MyApp({ Component, pageProps, router }) {
       {domElements}
       <div ref={layoutRef} id="layout" className={styles.layout}>
         {canvasElements}
-        <Canvas
-          id="fluidCanvas"
-          flat
-          gl={{
-            antialias: false,
-            stencil: false,
-            depth: false,
-            pixelRatio: 0.1,
-          }}
-          style={{ mixBlendMode: 'difference', background: 'black' }}
-          linear
-          className={styles.canvasContainer}
-          eventSource={mainRef.current}
-          dpr={[0.1, 0.5]}
-        >
-          <EffectComposer>
-            <Fluid fluidColor={fluidColor} mainRef={mainRef} />
-          </EffectComposer>
-        </Canvas>
+        {enableFluid && (
+          <Canvas
+            id="fluidCanvas"
+            flat
+            gl={{
+              antialias: false,
+              stencil: false,
+              depth: false,
+              pixelRatio: 0.1,
+            }}
+            style={{ mixBlendMode: 'difference', background: 'black' }}
+            linear
+            className={styles.canvasContainer}
+            eventSource={mainRef.current}
+            dpr={[0.1, 0.35]}
+          >
+            <EffectComposer>
+              <Fluid fluidColor={fluidColor} mainRef={mainRef} />
+            </EffectComposer>
+          </Canvas>
+        )}
         <main ref={mainRef} className={styles.main}>
           <div ref={mainContainerRef} id="mainContainer" className={styles.mainContainer}>
             <Layout layoutRef={layoutRef} mainRef={mainRef} router={router}>

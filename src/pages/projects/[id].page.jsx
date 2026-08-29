@@ -1,8 +1,9 @@
 /* eslint-disable react/jsx-props-no-spreading */
 import ButtonLink from '@src/components/animationComponents/buttonLink/Index';
 import CustomHead from '@src/components/dom/CustomHead';
-import Image from 'next/image';
 import Link from 'next/link';
+import ProjectArtwork from '@src/components/dom/ProjectArtwork';
+import ProjectMedia from '@src/pages/projects/components/projectMedia/ProjectMedia';
 import clsx from 'clsx';
 import projects from '@src/constants/projects';
 import styles from '@src/pages/projects/project.module.scss';
@@ -41,15 +42,15 @@ function Page({ id }) {
           </div>
           <strong className={styles.outcome}>{project.outcome}</strong>
           <div className={styles.heroAction}>
-            <ButtonLink target href={project.liveLink} label="体验项目" />
+            <ButtonLink target href={project.liveLink} label={project.ctaLabel || '体验项目'} />
           </div>
         </section>
 
         <section className={clsx(styles.visual, 'layout-block-inner')}>
           <div className={styles.visualInner}>
-            <Image src={project.cover} fill sizes="94vw" alt={`${project.title}真实项目界面`} />
+            <ProjectArtwork project={project} sizes="94vw" alt={`${project.title}真实项目素材`} />
             <a href={project.liveLink} target="_blank" rel="noreferrer">
-              进入可交互版本 <b>↗</b>
+              {project.ctaLabel || '进入可交互版本'} <b>↗</b>
             </a>
           </div>
         </section>
@@ -78,11 +79,13 @@ function Page({ id }) {
             <h3>{project.result}</h3>
             {project.liveLink && (
               <div>
-                <ButtonLink target href={project.liveLink} label={hasEmbeddedDemo ? '打开可交互原型' : '体验线上产品'} />
+                <ButtonLink target href={project.liveLink} label={project.ctaLabel || (hasEmbeddedDemo ? '打开可交互原型' : '体验线上产品')} />
               </div>
             )}
           </div>
         </section>
+
+        <ProjectMedia project={project} language="zh" />
 
         {hasEmbeddedDemo && (
           <section className={clsx(styles.demoSection, 'layout-block-inner')}>

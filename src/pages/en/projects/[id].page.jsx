@@ -1,8 +1,9 @@
 /* eslint-disable react/jsx-props-no-spreading */
 import ButtonLink from '@src/components/animationComponents/buttonLink/Index';
 import CustomHead from '@src/components/dom/CustomHead';
-import Image from 'next/image';
 import Link from 'next/link';
+import ProjectArtwork from '@src/components/dom/ProjectArtwork';
+import ProjectMedia from '@src/pages/projects/components/projectMedia/ProjectMedia';
 import clsx from 'clsx';
 import projects from '@src/constants/projects';
 import { localizeProject } from '@src/utils/locale';
@@ -43,15 +44,15 @@ function Page({ id }) {
           </div>
           <strong className={styles.outcome}>{project.outcome}</strong>
           <div className={styles.heroAction}>
-            <ButtonLink target href={project.liveLink} label="TRY THE PRODUCT" />
+            <ButtonLink target href={project.liveLink} label={project.ctaLabel || 'TRY THE PRODUCT'} />
           </div>
         </section>
 
         <section className={clsx(styles.visual, 'layout-block-inner')}>
           <div className={styles.visualInner}>
-            <Image src={project.cover} fill sizes="94vw" alt={`${project.title} product interface`} />
+            <ProjectArtwork project={project} sizes="94vw" alt={`${project.title} project material`} />
             <a href={project.liveLink} target="_blank" rel="noreferrer">
-              Open the interactive version <b>↗</b>
+              {project.ctaLabel || 'Open the interactive version'} <b>↗</b>
             </a>
           </div>
         </section>
@@ -80,11 +81,13 @@ function Page({ id }) {
             <h3>{project.result}</h3>
             {project.liveLink && (
               <div>
-                <ButtonLink target href={project.liveLink} label={hasEmbeddedDemo ? 'OPEN INTERACTIVE PROTOTYPE' : 'TRY THE LIVE PRODUCT'} />
+                <ButtonLink target href={project.liveLink} label={project.ctaLabel || (hasEmbeddedDemo ? 'OPEN INTERACTIVE PROTOTYPE' : 'TRY THE LIVE PRODUCT')} />
               </div>
             )}
           </div>
         </section>
+
+        <ProjectMedia project={project} language="en" />
 
         {hasEmbeddedDemo && (
           <section className={clsx(styles.demoSection, 'layout-block-inner')}>

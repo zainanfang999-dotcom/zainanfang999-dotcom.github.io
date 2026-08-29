@@ -47,7 +47,7 @@ function Layout({ children, layoutRef, mainRef, router }) {
               setIsEntering(false);
             },
           },
-          2.5,
+          0.45,
         )
           .to(
             '#loader',
@@ -55,7 +55,7 @@ function Layout({ children, layoutRef, mainRef, router }) {
               x: '-100%',
               ease: 'power2.inOut',
             },
-            2.5,
+            0.45,
           )
           .to(
             mainRef.current,
@@ -63,7 +63,7 @@ function Layout({ children, layoutRef, mainRef, router }) {
               ease: 'power2.inOut',
               x: '0px',
             },
-            2.5,
+            0.45,
           )
           .to(
             mainRef.current,
@@ -72,7 +72,7 @@ function Layout({ children, layoutRef, mainRef, router }) {
               borderRadius: 0,
               scale: 1,
             },
-            3,
+            0.95,
           )
           .to(
             layoutRef.current,
@@ -81,7 +81,7 @@ function Layout({ children, layoutRef, mainRef, router }) {
               height: '100%',
               opacity: 1,
             },
-            3,
+            0.95,
           )
           .to(
             'header',
@@ -89,7 +89,7 @@ function Layout({ children, layoutRef, mainRef, router }) {
               ease: 'power2.inOut',
               autoAlpha: 1,
             },
-            3.3,
+            1.25,
           )
           .to(
             mainRef.current,
@@ -99,7 +99,7 @@ function Layout({ children, layoutRef, mainRef, router }) {
               border: 'none',
               pointerEvents: 'auto',
             },
-            3.3,
+            1.25,
           );
       }
     },
@@ -219,8 +219,8 @@ function Layout({ children, layoutRef, mainRef, router }) {
           in={false}
           unmountOnExit
           timeout={{
-            enter: introOut ? 4500 : 0,
-            exit: introOut ? 2550 : 0,
+            enter: introOut ? 1800 : 0,
+            exit: introOut ? 1900 : 0,
           }}
           onEnter={handleEnter}
           onExit={handleExit}

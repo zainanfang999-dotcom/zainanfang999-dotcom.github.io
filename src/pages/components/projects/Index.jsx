@@ -1,7 +1,7 @@
 import AppearByWords from '@src/components/animationComponents/appearByWords/Index';
 import ButtonLink from '@src/components/animationComponents/buttonLink/Index';
-import Image from 'next/image';
 import Link from 'next/link';
+import ProjectArtwork from '@src/components/dom/ProjectArtwork';
 import clsx from 'clsx';
 import projects from '@src/constants/projects';
 import { localizeProject } from '@src/utils/locale';
@@ -20,8 +20,8 @@ function Projects({ language = 'zh' }) {
         </h1>
         <p>
           {isEnglish
-            ? 'Three completed projects spanning product definition, user research, workflow design and interactive prototyping.'
-            : '3 个已完成项目，包含产品定义、用户研究、工作流设计与可交互原型。'}
+            ? 'Four completed projects spanning AI product definition, user research, workflow design and parametric prototyping.'
+            : '4 个已完成项目，包含 AI 产品定义、用户研究、工作流设计与参数化原型。'}
         </p>
       </section>
       <section className={clsx(styles.root, 'layout-block-inner')}>
@@ -47,7 +47,7 @@ function Projects({ language = 'zh' }) {
                   </div>
                   <div className={styles.actions}>
                     <a href={project.liveLink} target="_blank" rel="noreferrer" className={styles.primaryAction}>
-                      {isEnglish ? 'TRY THE PRODUCT' : '体验项目'} <b>↗</b>
+                      {project.ctaLabel || (isEnglish ? 'TRY THE PRODUCT' : '体验项目')} <b>↗</b>
                     </a>
                     <Link href={project.link} scroll={false} className={styles.secondaryAction}>
                       {isEnglish ? 'VIEW CASE STUDY' : '查看案例'} →
@@ -55,7 +55,7 @@ function Projects({ language = 'zh' }) {
                   </div>
                 </div>
                 <Link aria-label={project.title} href={project.link} scroll={false} className={styles.cover}>
-                  <Image src={project.cover} fill sizes="(max-width: 700px) 94vw, 58vw" alt={project.title} />
+                  <ProjectArtwork project={project} sizes="(max-width: 700px) 94vw, 58vw" alt={project.title} />
                   <span>OPEN CASE ↗</span>
                 </Link>
               </div>

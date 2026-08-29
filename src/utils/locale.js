@@ -33,5 +33,7 @@ export const localizeProject = (project, language = 'zh') => {
     approach: project.approachEn,
     result: project.resultEn,
     tags: project.tagsEn,
+    ctaLabel: project.ctaLabelEn || project.ctaLabel,
+    media: project.media?.map((item) => ({ ...item, title: item.titleEn, description: item.descriptionEn })),
   };
 };
