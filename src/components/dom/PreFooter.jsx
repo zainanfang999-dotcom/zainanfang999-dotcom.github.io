@@ -12,8 +12,8 @@ function PreFooter() {
       <div className={styles.label}>CONTACT / 2026</div>
       <h2>{isEnglish ? 'Zhao Qingzhuo' : '赵庆卓'}</h2>
       <p>{isEnglish ? 'AI Product Manager · M.Arch, Southeast University · Nanjing' : 'AI 产品经理 · 东南大学建筑学硕士 · 南京'}</p>
-      <a href="mailto:zai_nanfang@163.com">
-        zai_nanfang@163.com <b>↗</b>
+      <a href="mailto:2074211486@qq.com">
+        2074211486@qq.com <b>↗</b>
       </a>
     </section>
   );

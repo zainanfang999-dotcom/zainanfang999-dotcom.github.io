@@ -13,7 +13,7 @@ const getSchema = (language, url) => ({
   jobTitle: language === 'en' ? 'AI Product Manager' : 'AI 产品经理',
   url,
   image: OG_IMAGE,
-  email: 'mailto:zai_nanfang@163.com',
+  email: 'mailto:2074211486@qq.com',
   sameAs: [],
   alumniOf: [
     {

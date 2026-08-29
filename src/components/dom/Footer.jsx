@@ -82,8 +82,8 @@ function Footer() {
         <AppearTitle isFooter>
           <h4 className={clsx(styles.workWithMe, 'h4')}>{isEnglish ? 'LET’S KEEP IN TOUCH:' : '保持联系：'}</h4>
           <div className={styles.link}>
-            <Link aria-label="发送邮件" href="mailto:zai_nanfang@163.com">
-              <h4 className={clsx(styles.email, 'h4')}>zai_nanfang@163.com</h4>
+            <Link aria-label="发送邮件" href="mailto:2074211486@qq.com">
+              <h4 className={clsx(styles.email, 'h4')}>2074211486@qq.com</h4>
             </Link>
           </div>
         </AppearTitle>

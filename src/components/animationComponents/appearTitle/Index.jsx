@@ -5,7 +5,7 @@ import styles from '@src/components/animationComponents/appearTitle/appearTitle.
 import useIntersected from '@src/hooks/useIntersected';
 import { useIsomorphicLayoutEffect } from '@src/hooks/useIsomorphicLayoutEffect';
 
-const AppearTitle = forwardRef(({ children, index = -1, optionIndex = -1, isFooter = false }, ref) => {
+const AppearTitle = forwardRef(({ children, className, index = -1, optionIndex = -1, isFooter = false }, ref) => {
   const containerRef = useRef();
 
   const intersected = useIntersected(containerRef);
@@ -37,6 +37,7 @@ const AppearTitle = forwardRef(({ children, index = -1, optionIndex = -1, isFoot
         }
       }}
       className={clsx(
+        className,
         !isFooter && styles.title,
         isFooter && styles.titleFooter,
         intersected && !isFooter && styles.visible,

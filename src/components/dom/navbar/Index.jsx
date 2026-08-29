@@ -41,6 +41,19 @@ function Navbar() {
     }
   }, [router.pathname, scrollToPosition]);
 
+  const goToContact = useCallback(
+    (event) => {
+      event.preventDefault();
+      const contactSection = document.getElementById('contact');
+      if (contactSection && lenis) {
+        scrollToPosition(contactSection);
+      } else {
+        contactSection?.scrollIntoView({ behavior: 'smooth' });
+      }
+    },
+    [lenis, scrollToPosition],
+  );
+
   return (
     <>
       <MenuLinks />
@@ -52,7 +65,7 @@ function Navbar() {
           </Link>
 
           <div className={styles.rightContainer}>
-            {!isMobile && <ButtonLink href="mailto:zai_nanfang@163.com" label={isEnglish ? 'CONTACT' : '联系我 / CONTACT'} />}
+            {!isMobile && <ButtonLink href="#contact" label={isEnglish ? 'CONTACT' : '联系我 / CONTACT'} onClick={goToContact} />}
             <Link className={styles.languageSwitch} aria-label={isEnglish ? '切换至中文版' : 'Switch to English'} scroll={false} href={languageHref}>
               {isEnglish ? '中' : 'EN'}
             </Link>

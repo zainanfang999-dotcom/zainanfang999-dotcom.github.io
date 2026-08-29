@@ -186,7 +186,7 @@ function MenuLinks() {
             }}
             className={styles.menuListItem}
           >
-            <Link aria-label="发送邮件" scroll={false} href="mailto:zai_nanfang@163.com">
+            <Link aria-label="发送邮件" scroll={false} href="mailto:2074211486@qq.com">
               <span>{isEnglish ? 'CONTACT' : '联系我 / CONTACT'}</span>
             </Link>
           </div>

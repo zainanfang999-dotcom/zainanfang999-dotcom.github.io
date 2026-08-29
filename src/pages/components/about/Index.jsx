@@ -21,7 +21,7 @@ function About({ language = 'zh' }) {
     <section id="about" className={styles.root}>
       <div className={clsx(styles.heading, 'layout-grid-inner')}>
         <div className={styles.sectionNo}>01 / ABOUT</div>
-        <AppearTitle>
+        <AppearTitle className={styles.titleWrap}>
           <h1>{isEnglish ? 'Profile & Capabilities' : '个人信息与能力'}</h1>
         </AppearTitle>
       </div>
@@ -30,7 +30,7 @@ function About({ language = 'zh' }) {
           <span>{isEnglish ? 'ZHAO QINGZHUO / AI PRODUCT MANAGER' : '赵庆卓 / AI 产品经理'}</span>
           <h2>{isEnglish ? 'M.Arch with a focus on AI products, user research and workflow tools.' : '建筑学硕士，聚焦 AI 产品、用户研究与工作流工具。'}</h2>
           <div className={styles.buttonContainer}>
-            <ButtonLink href="mailto:zai_nanfang@163.com" label={isEnglish ? 'GET IN TOUCH' : '联系我 / CONTACT'} />
+            <ButtonLink href="mailto:2074211486@qq.com" label={isEnglish ? 'GET IN TOUCH' : '联系我 / CONTACT'} />
           </div>
         </div>
         <div className={styles.education}>
