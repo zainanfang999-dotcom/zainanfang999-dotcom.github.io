@@ -1,6 +1,6 @@
-# 赵庆卓｜AI 产品经理作品集
+# 在南方｜AI 产品经理作品集
 
-赵庆卓的个人作品集网站，展示已完成的 AI 产品、空间数据工具、科研流程自动化项目，以及个人建筑设计与水彩作品。
+在南方的个人作品集网站，展示已完成的 AI 产品、空间数据工具、科研流程自动化项目，以及个人建筑设计与水彩作品。
 
 - 中文版：<https://zainanfang999-dotcom.github.io/>
 - English version: <https://zainanfang999-dotcom.github.io/en/>
